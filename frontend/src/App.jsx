@@ -4,10 +4,11 @@ import { SoloContractChoice } from './SoloContractChoice';
 import { MiningChallenge } from './MiningChallenge';
 import { VotingChallenge } from './VotingChallenge';
 import { Results } from './Results';
+import { ClassMode } from './ClassMode';
 import { LandingPage } from './LandingPage';
 
 function App() {
-  const [step, setStep] = useState('landing'); // 'landing' | 'solo' | 'soloContracts' | 'mining' | 'voting' | 'results'
+  const [step, setStep] = useState('landing'); // 'landing' | 'solo' | 'class' | 'soloContracts' | 'mining' | 'voting' | 'results'
   const [soloPlayerName, setSoloPlayerName] = useState('');
   const [playerScore, setPlayerScore] = useState(0);
   const [gameHistory, setGameHistory] = useState({
@@ -20,6 +21,10 @@ function App() {
     setStep('solo');
     setPlayerScore(0); // Réinitialiser le score
     setGameHistory({ validation: null, mining: null, voting: null });
+  }
+
+  function goToClassMode() {
+    setStep('class');
   }
 
   function goToLanding() {
@@ -106,7 +111,11 @@ function App() {
 
       <main className="app-main">
         {step === 'landing' && (
-          <LandingPage onSolo={goToSolo} />
+          <LandingPage onSolo={goToSolo} onClassMode={goToClassMode} />
+        )}
+
+        {step === 'class' && (
+          <ClassMode onBack={goToLanding} />
         )}
 
         {step === 'solo' && (

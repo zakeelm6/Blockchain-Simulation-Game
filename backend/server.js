@@ -17,6 +17,51 @@ const state = {
   votesLog: []
 };
 
+// Mode Classe - Stockage en mémoire
+const classrooms = new Map(); // classCode -> classroom data
+// Structure classroom (team mode):
+// {
+//   code: string (6 chars),
+//   name: string,
+//   mode: 'team' | 'solo',
+//   createdBy: string (responsable name),
+//   createdAt: timestamp,
+//   participants: [{ name, joinedAt }],
+//   groups: [{ id, name, logo, members: [name], validator: name, contractChoice: id, votes: {name: contractId}, score: 0 }],
+//   status: 'waiting' | 'voting' | 'validating' | 'completed',
+//   selectedContracts: [contractId], // 5 contracts to validate
+//   validationResults: { groupId: { isValid, validatorScores: {name: points} } }
+// }
+//
+// Structure classroom (solo mode):
+// {
+//   code: string (6 chars),
+//   name: string,
+//   mode: 'solo',
+//   createdBy: string (responsable name),
+//   createdAt: timestamp,
+//   participants: [{ name, joinedAt }],
+//   status: 'waiting' | 'playing' | 'dao-voting' | 'completed',
+//   playerProgress: {
+//     [playerName]: {
+//       status: 'contract' | 'mining' | 'voting' | 'completed' | 'eliminated',
+//       contractPair: [contractId, contractId],
+//       contractChoice: contractId,
+//       contractCorrect: boolean,
+//       validationScore: number, // Number of bots that validated correctly
+//       miningAttempts: number,
+//       miningNonce: number,
+//       miningTarget: number,
+//       miningCompleted: boolean,
+//       totalScore: number,
+//       eliminatedAt: timestamp,
+//       eliminatedReason: string
+//     }
+//   },
+//   daoVotes: { voterName: { targetName: 'for'|'against' } },
+//   finalRankings: [{ name, score, votesFor, votesAgainst, finalScore }]
+// }
+
 // ---------------- Helpers ----------------
 
 function escapeHtml(str) {
@@ -412,6 +457,854 @@ app.post('/api/solo/contracts/answer', (req, res) => {
       code: contract.code
     },
     player: team
+  });
+});
+
+// ================ MODE CLASSE API ================
+
+// Helper: Generate random 6-character code
+function generateClassCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Sans I, O, 0, 1 pour éviter confusion
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+// Helper: Generate unique code
+function generateUniqueClassCode() {
+  let code;
+  do {
+    code = generateClassCode();
+  } while (classrooms.has(code));
+  return code;
+}
+
+// Helper: Form groups automatically (4 per group)
+function formGroups(participants) {
+  const shuffled = [...participants].sort(() => Math.random() - 0.5);
+  const groups = [];
+  const groupSize = 4;
+  const numGroups = Math.floor(shuffled.length / groupSize);
+
+  const logos = ['🦁', '🐯', '🐻', '🦅', '🐺', '🐉', '🦈', '🦊', '🐆', '🦌'];
+  const groupNames = ['Lions', 'Tigres', 'Ours', 'Aigles', 'Loups', 'Dragons', 'Requins', 'Renards', 'Guépards', 'Cerfs'];
+
+  for (let i = 0; i < numGroups; i++) {
+    const members = shuffled.slice(i * groupSize, (i + 1) * groupSize);
+    const validator = members[3]; // Le 4ème membre est le validateur
+    const voters = members.slice(0, 3); // Les 3 premiers votent
+
+    groups.push({
+      id: `group_${i + 1}`,
+      name: groupNames[i] || `Groupe ${i + 1}`,
+      logo: logos[i] || '⭐',
+      members: voters.map(p => p.name),
+      validator: validator.name,
+      votes: {}, // { memberName: contractId }
+      contractChoice: null,
+      score: 0
+    });
+  }
+
+  return groups;
+}
+
+// POST /api/class/create - Créer une nouvelle classe
+app.post('/api/class/create', (req, res) => {
+  const { className, responsableName, mode } = req.body; // mode: 'team' ou 'solo'
+
+  if (!className || !responsableName) {
+    return res.status(400).json({ error: 'Nom de classe et nom du responsable requis' });
+  }
+
+  const classMode = mode === 'solo' ? 'solo' : 'team'; // Par défaut 'team'
+  const code = generateUniqueClassCode();
+
+  const classroom = {
+    code,
+    name: className,
+    mode: classMode,
+    createdBy: responsableName,
+    createdAt: Date.now(),
+    participants: [],
+    status: 'waiting'
+  };
+
+  // Ajouter les champs spécifiques au mode
+  if (classMode === 'team') {
+    classroom.groups = [];
+    classroom.selectedContracts = [];
+    classroom.validationResults = {};
+  } else {
+    classroom.playerProgress = {};
+  }
+
+  classrooms.set(code, classroom);
+
+  res.json({
+    ok: true,
+    code,
+    classroom
+  });
+});
+
+// POST /api/class/join - Rejoindre une classe avec un code
+app.post('/api/class/join', (req, res) => {
+  const { classCode, participantName } = req.body;
+
+  if (!classCode || !participantName) {
+    return res.status(400).json({ error: 'Code de classe et nom du participant requis' });
+  }
+
+  const classroom = classrooms.get(classCode.toUpperCase());
+
+  if (!classroom) {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  if (classroom.status !== 'waiting') {
+    return res.status(400).json({ error: 'La classe a déjà commencé' });
+  }
+
+  // Vérifier si le nom existe déjà
+  if (classroom.participants.some(p => p.name === participantName)) {
+    return res.status(400).json({ error: 'Ce nom est déjà pris' });
+  }
+
+  classroom.participants.push({
+    name: participantName,
+    joinedAt: Date.now()
+  });
+
+  res.json({
+    ok: true,
+    classroom
+  });
+});
+
+// GET /api/class/:code - Obtenir les infos d'une classe
+app.get('/api/class/:code', (req, res) => {
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom) {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  res.json({ ok: true, classroom });
+});
+
+// POST /api/class/:code/start - Démarrer la classe et former les groupes
+app.post('/api/class/:code/start', (req, res) => {
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom) {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  if (classroom.participants.length < 4) {
+    return res.status(400).json({ error: 'Minimum 4 participants requis' });
+  }
+
+  // Former les groupes automatiquement
+  classroom.groups = formGroups(classroom.participants);
+  classroom.status = 'voting';
+
+  // Sélectionner 5 smart contracts aléatoires (1 par groupe, mais variant)
+  const { SMART_CONTRACTS } = require('./smartContracts');
+  const valids = SMART_CONTRACTS.filter(c => c.isValid);
+  const invalids = SMART_CONTRACTS.filter(c => !c.isValid);
+
+  classroom.selectedContracts = [];
+  for (let i = 0; i < classroom.groups.length; i++) {
+    const useValid = Math.random() > 0.5;
+    const pool = useValid ? valids : invalids;
+    const contract = pool[Math.floor(Math.random() * pool.length)];
+    classroom.selectedContracts.push(contract.id);
+  }
+
+  res.json({
+    ok: true,
+    classroom
+  });
+});
+
+// POST /api/class/:code/vote - Vote d'un membre pour un smart contract
+app.post('/api/class/:code/vote', (req, res) => {
+  const { memberName, contractId } = req.body;
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom) {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  // Trouver le groupe du membre
+  const group = classroom.groups.find(g => g.members.includes(memberName));
+
+  if (!group) {
+    return res.status(400).json({ error: 'Membre non trouvé dans un groupe votant' });
+  }
+
+  // Enregistrer le vote
+  group.votes[memberName] = contractId;
+
+  // Vérifier si tous les membres ont voté
+  const allVoted = group.members.every(m => group.votes[m]);
+
+  if (allVoted) {
+    // Compter les votes et choisir le contrat majoritaire
+    const voteCounts = {};
+    Object.values(group.votes).forEach(cId => {
+      voteCounts[cId] = (voteCounts[cId] || 0) + 1;
+    });
+
+    const winner = Object.entries(voteCounts).sort((a, b) => b[1] - a[1])[0][0];
+    group.contractChoice = winner;
+  }
+
+  // Vérifier si tous les groupes ont terminé de voter
+  const allGroupsVoted = classroom.groups.every(g => g.contractChoice !== null);
+
+  if (allGroupsVoted) {
+    classroom.status = 'validating';
+  }
+
+  res.json({
+    ok: true,
+    classroom
+  });
+});
+
+// POST /api/class/:code/validate - Validation par un validateur
+app.post('/api/class/:code/validate', (req, res) => {
+  const { validatorName, groupId, isValid } = req.body;
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom) {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  const { SMART_CONTRACTS } = require('./smartContracts');
+  const group = classroom.groups.find(g => g.id === groupId);
+
+  if (!group) {
+    return res.status(400).json({ error: 'Groupe non trouvé' });
+  }
+
+  const contract = SMART_CONTRACTS.find(c => c.id === group.contractChoice);
+  const correctValidation = contract.isValid === isValid;
+
+  // Initialiser les résultats de validation si nécessaire
+  if (!classroom.validationResults[groupId]) {
+    classroom.validationResults[groupId] = {
+      validations: {},
+      validatorScores: {}
+    };
+  }
+
+  // Enregistrer la validation
+  classroom.validationResults[groupId].validations[validatorName] = {
+    isValid,
+    correct: correctValidation,
+    timestamp: Date.now()
+  };
+
+  // Calculer les points pour le validateur
+  if (correctValidation) {
+    classroom.validationResults[groupId].validatorScores[validatorName] = 5; // +5 pour bonne validation
+  } else {
+    classroom.validationResults[groupId].validatorScores[validatorName] = -3; // -3 pour mauvaise validation
+  }
+
+  // Vérifier si toutes les validations sont complètes
+  const totalValidations = Object.keys(classroom.validationResults).reduce((sum, gId) => {
+    return sum + Object.keys(classroom.validationResults[gId].validations).length;
+  }, 0);
+
+  if (totalValidations === classroom.groups.length * classroom.groups.length) {
+    // Calculer les scores finaux des groupes
+    classroom.groups.forEach(g => {
+      const contract = SMART_CONTRACTS.find(c => c.id === g.contractChoice);
+      if (contract && contract.isValid) {
+        g.score += 10; // +10 pour avoir choisi un bon contrat
+      }
+    });
+
+    // Sélectionner les équipes qualifiées pour le mining (top 20% ou min 1 équipe)
+    const sortedGroups = [...classroom.groups].sort((a, b) => b.score - a.score);
+    const qualifiedCount = Math.max(1, Math.ceil(classroom.groups.length * 0.2));
+    const qualifiedGroupIds = sortedGroups.slice(0, qualifiedCount).map(g => g.id);
+
+    // Générer un nonce cible pour le mining (0-100)
+    const targetNonce = Math.floor(Math.random() * 101);
+
+    classroom.qualifiedGroups = qualifiedGroupIds;
+    classroom.miningTarget = targetNonce;
+    classroom.miningResults = {}; // { groupId: { solved, solvedBy, solvedAt, attempts: {memberName: count} } }
+    classroom.status = 'mining';
+  }
+
+  res.json({
+    ok: true,
+    classroom,
+    correct: correctValidation,
+    points: correctValidation ? 5 : -3
+  });
+});
+
+// POST /api/class/:code/mine - Tentative de mining par un membre
+app.post('/api/class/:code/mine', (req, res) => {
+  const { memberName, nonce } = req.body;
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom) {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  if (classroom.status !== 'mining') {
+    return res.status(400).json({ error: 'Phase de mining non active' });
+  }
+
+  // Trouver le groupe du membre
+  const group = classroom.groups.find(g =>
+    g.members.includes(memberName) || g.validator === memberName
+  );
+
+  if (!group) {
+    return res.status(400).json({ error: 'Membre non trouvé dans un groupe' });
+  }
+
+  // Vérifier si le groupe est qualifié
+  if (!classroom.qualifiedGroups.includes(group.id)) {
+    return res.status(400).json({ error: 'Votre équipe n\'est pas qualifiée pour le mining' });
+  }
+
+  // Initialiser les résultats de mining pour ce groupe si nécessaire
+  if (!classroom.miningResults[group.id]) {
+    classroom.miningResults[group.id] = {
+      solved: false,
+      solvedBy: null,
+      solvedAt: null,
+      attempts: {}
+    };
+  }
+
+  const groupResult = classroom.miningResults[group.id];
+
+  // Vérifier si le groupe a déjà trouvé
+  if (groupResult.solved) {
+    return res.json({
+      ok: true,
+      alreadySolved: true,
+      solvedBy: groupResult.solvedBy,
+      classroom
+    });
+  }
+
+  // Initialiser le compteur de tentatives pour ce membre
+  if (!groupResult.attempts[memberName]) {
+    groupResult.attempts[memberName] = 0;
+  }
+
+  // Vérifier si le membre a atteint ses 10 tentatives
+  if (groupResult.attempts[memberName] >= 10) {
+    return res.status(400).json({ error: 'Vous avez épuisé vos 10 tentatives' });
+  }
+
+  // Incrémenter le compteur
+  groupResult.attempts[memberName]++;
+
+  // Vérifier si le nonce est correct
+  const correct = parseInt(nonce) === classroom.miningTarget;
+
+  if (correct) {
+    groupResult.solved = true;
+    groupResult.solvedBy = memberName;
+    groupResult.solvedAt = Date.now();
+
+    // Calculer le rang (nombre d'équipes qui ont déjà résolu)
+    const solvedCount = Object.values(classroom.miningResults).filter(r => r.solved).length;
+
+    // Attribution des points selon le rang
+    let points = 0;
+    if (solvedCount === 1) points = 30; // 1ère équipe
+    else if (solvedCount === 2) points = 20; // 2ème équipe
+    else if (solvedCount === 3) points = 15; // 3ème équipe
+    else if (solvedCount === 4) points = 10; // 4ème équipe
+    else points = 5; // Autres
+
+    group.score += points;
+    group.miningPoints = points;
+  }
+
+  // Vérifier si toutes les équipes qualifiées ont terminé (trouvé ou épuisé tentatives)
+  const allQualifiedFinished = classroom.qualifiedGroups.every(gId => {
+    const result = classroom.miningResults[gId];
+    if (!result) return false;
+    if (result.solved) return true;
+
+    // Vérifier si toutes les tentatives sont épuisées
+    const grp = classroom.groups.find(g => g.id === gId);
+    const allMembers = [...grp.members, grp.validator];
+    const totalAttempts = allMembers.reduce((sum, m) => sum + (result.attempts[m] || 0), 0);
+    const maxAttempts = allMembers.length * 10;
+
+    return totalAttempts >= maxAttempts;
+  });
+
+  if (allQualifiedFinished) {
+    // Sélectionner les 2 meilleures équipes pour le vote DAO final
+    const rankedGroups = [...classroom.groups].sort((a, b) => b.score - a.score);
+    const top2Groups = rankedGroups.slice(0, 2);
+    const top2GroupIds = top2Groups.map(g => g.id);
+
+    // Calculer les points individuels pour chaque membre des 2 meilleures équipes
+    classroom.individualScores = {};
+    top2Groups.forEach(group => {
+      const allMembers = [...group.members, group.validator];
+      allMembers.forEach(member => {
+        // Points de base de l'équipe divisés par le nombre de membres
+        let memberPoints = Math.floor(group.score / allMembers.length);
+
+        // Bonus si le membre a trouvé le nonce
+        const miningResult = classroom.miningResults?.[group.id];
+        if (miningResult?.solvedBy === member) {
+          memberPoints += 10; // Bonus pour avoir trouvé le nonce
+        }
+
+        classroom.individualScores[member] = memberPoints;
+      });
+    });
+
+    classroom.top2Groups = top2GroupIds;
+    classroom.daoVotes = {}; // { voterName: { targetName: 'for'|'against' } }
+    classroom.status = 'dao';
+  }
+
+  res.json({
+    ok: true,
+    correct,
+    attempts: groupResult.attempts[memberName],
+    maxAttempts: 10,
+    solved: groupResult.solved,
+    solvedBy: groupResult.solvedBy,
+    points: correct ? (group.miningPoints || 0) : 0,
+    classroom
+  });
+});
+
+// POST /api/class/:code/dao-vote - Vote DAO individuel
+app.post('/api/class/:code/dao-vote', (req, res) => {
+  const { voterName, targetName, voteType } = req.body;
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom) {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  if (classroom.status !== 'dao') {
+    return res.status(400).json({ error: 'Phase de vote DAO non active' });
+  }
+
+  // Vérifier que le votant fait partie des 2 meilleures équipes
+  const voterGroup = classroom.groups.find(g =>
+    g.members.includes(voterName) || g.validator === voterName
+  );
+
+  if (!voterGroup || !classroom.top2Groups.includes(voterGroup.id)) {
+    return res.status(400).json({ error: 'Vous ne faites pas partie des équipes qualifiées pour le vote' });
+  }
+
+  // Vérifier que la cible fait partie des 2 meilleures équipes et n'est pas le votant
+  const targetGroup = classroom.groups.find(g =>
+    g.members.includes(targetName) || g.validator === targetName
+  );
+
+  if (!targetGroup || !classroom.top2Groups.includes(targetGroup.id)) {
+    return res.status(400).json({ error: 'Cible non valide' });
+  }
+
+  if (voterName === targetName) {
+    return res.status(400).json({ error: 'Vous ne pouvez pas voter pour vous-même' });
+  }
+
+  // Initialiser les votes du votant
+  if (!classroom.daoVotes[voterName]) {
+    classroom.daoVotes[voterName] = {};
+  }
+
+  // Enregistrer le vote
+  classroom.daoVotes[voterName][targetName] = voteType;
+
+  // Récupérer tous les participants des 2 meilleures équipes
+  const allQualifiedMembers = [];
+  classroom.top2Groups.forEach(gId => {
+    const group = classroom.groups.find(g => g.id === gId);
+    allQualifiedMembers.push(...group.members, group.validator);
+  });
+
+  // Vérifier si tous les membres ont voté pour tous les autres
+  const allVoted = allQualifiedMembers.every(voter => {
+    const voterVotes = classroom.daoVotes[voter] || {};
+    const expectedVotes = allQualifiedMembers.filter(m => m !== voter).length;
+    return Object.keys(voterVotes).length === expectedVotes;
+  });
+
+  if (allVoted) {
+    // Calculer les scores finaux avec les votes pondérés
+    classroom.finalScores = {};
+
+    allQualifiedMembers.forEach(member => {
+      let finalScore = classroom.individualScores[member] || 0;
+
+      // Appliquer les votes reçus
+      allQualifiedMembers.forEach(voter => {
+        if (voter !== member && classroom.daoVotes[voter]?.[member]) {
+          const voterScore = classroom.individualScores[voter] || 0;
+          const weight = Math.floor(voterScore / 10);
+          const voteType = classroom.daoVotes[voter][member];
+
+          if (voteType === 'for') {
+            finalScore += weight * 3; // Vote pour = +3 × poids
+          } else if (voteType === 'against') {
+            finalScore -= weight; // Vote contre = -1 × poids
+          }
+        }
+      });
+
+      classroom.finalScores[member] = finalScore;
+    });
+
+    // Créer le classement final
+    const rankings = allQualifiedMembers.map(member => ({
+      name: member,
+      initialScore: classroom.individualScores[member] || 0,
+      votesFor: allQualifiedMembers.filter(v => classroom.daoVotes[v]?.[member] === 'for').length,
+      votesAgainst: allQualifiedMembers.filter(v => classroom.daoVotes[v]?.[member] === 'against').length,
+      finalScore: classroom.finalScores[member]
+    })).sort((a, b) => b.finalScore - a.finalScore);
+
+    classroom.finalRankings = rankings;
+    classroom.status = 'completed';
+  }
+
+  res.json({
+    ok: true,
+    classroom
+  });
+});
+
+// ================ MODE SOLO EN CLASSE API ================
+
+// POST /api/class/:code/solo/start - Démarrer le jeu pour un joueur en mode solo
+app.post('/api/class/:code/solo/start', (req, res) => {
+  const { playerName } = req.body;
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom) {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  if (classroom.mode !== 'solo') {
+    return res.status(400).json({ error: 'Cette classe n\'est pas en mode solo' });
+  }
+
+  // Vérifier que le joueur a rejoint
+  if (!classroom.participants.some(p => p.name === playerName)) {
+    return res.status(400).json({ error: 'Joueur non inscrit dans cette classe' });
+  }
+
+  // Initialiser le progrès du joueur s'il n'existe pas
+  if (!classroom.playerProgress[playerName]) {
+    // Générer une paire de contrats
+    const pair = pickSoloPair();
+    if (!pair) {
+      return res.status(500).json({ error: 'Impossible de générer des contrats' });
+    }
+
+    classroom.playerProgress[playerName] = {
+      status: 'contract',
+      contractPair: pair.map(c => c.id),
+      contractChoice: null,
+      contractCorrect: false,
+      validationScore: 0,
+      miningAttempts: 0,
+      miningNonce: null,
+      miningTarget: Math.floor(Math.random() * 21), // 0-20 comme en solo classique
+      miningCompleted: false,
+      totalScore: 0,
+      eliminatedAt: null,
+      eliminatedReason: null
+    };
+
+    // Passer la classe en mode 'playing' si c'est le premier joueur
+    if (classroom.status === 'waiting') {
+      classroom.status = 'playing';
+    }
+  }
+
+  const progress = classroom.playerProgress[playerName];
+  const contracts = progress.contractPair.map(id => {
+    const c = SMART_CONTRACTS.find(ct => ct.id === id);
+    return {
+      id: c.id,
+      title: c.title,
+      description: c.description,
+      code: c.code
+    };
+  });
+
+  res.json({
+    ok: true,
+    classroom,
+    progress,
+    contracts
+  });
+});
+
+// POST /api/class/:code/solo/choose-contract - Choisir un smart contract
+app.post('/api/class/:code/solo/choose-contract', (req, res) => {
+  const { playerName, contractId } = req.body;
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom || classroom.mode !== 'solo') {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  const progress = classroom.playerProgress[playerName];
+  if (!progress) {
+    return res.status(400).json({ error: 'Joueur non initialisé' });
+  }
+
+  if (progress.status !== 'contract') {
+    return res.status(400).json({ error: 'Vous avez déjà choisi un contrat' });
+  }
+
+  const contract = SMART_CONTRACTS.find(c => c.id === contractId);
+  if (!contract) {
+    return res.status(404).json({ error: 'Contrat non trouvé' });
+  }
+
+  // Simuler la validation par 8 bots
+  const isValidContract = !!contract.isValid;
+  const totalValidators = 8;
+  const probValid = isValidContract ? 0.8 : 0.2;
+  let validVotes = 0;
+  for (let i = 0; i < totalValidators; i++) {
+    if (Math.random() < probValid) validVotes++;
+  }
+
+  progress.contractChoice = contractId;
+  progress.contractCorrect = isValidContract;
+  progress.validationScore = validVotes;
+
+  // Vérifier si le joueur passe (min 2 validateurs)
+  if (validVotes >= 2) {
+    // Le joueur passe au mining
+    progress.status = 'mining';
+    if (isValidContract) {
+      progress.totalScore += 10; // Bonus pour bon choix
+    }
+  } else {
+    // Le joueur est éliminé
+    progress.status = 'eliminated';
+    progress.eliminatedAt = Date.now();
+    progress.eliminatedReason = 'Moins de 2 validateurs ont approuvé votre choix';
+  }
+
+  res.json({
+    ok: true,
+    classroom,
+    progress,
+    correct: isValidContract,
+    validVotes,
+    totalValidators,
+    passed: validVotes >= 2,
+    explanation: contract.explanation
+  });
+});
+
+// POST /api/class/:code/solo/mine - Tentative de mining
+app.post('/api/class/:code/solo/mine', (req, res) => {
+  const { playerName, nonce } = req.body;
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom || classroom.mode !== 'solo') {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  const progress = classroom.playerProgress[playerName];
+  if (!progress) {
+    return res.status(400).json({ error: 'Joueur non initialisé' });
+  }
+
+  if (progress.status !== 'mining') {
+    return res.status(400).json({ error: 'Vous n\'êtes pas en phase de mining' });
+  }
+
+  if (progress.miningCompleted) {
+    return res.status(400).json({ error: 'Vous avez déjà terminé le mining' });
+  }
+
+  if (progress.miningAttempts >= 10) {
+    // Éliminer le joueur
+    progress.status = 'eliminated';
+    progress.eliminatedAt = Date.now();
+    progress.eliminatedReason = 'Toutes les tentatives de mining épuisées';
+    return res.json({
+      ok: true,
+      eliminated: true,
+      classroom,
+      progress
+    });
+  }
+
+  progress.miningAttempts++;
+  const correct = parseInt(nonce) === progress.miningTarget;
+
+  if (correct) {
+    progress.miningNonce = parseInt(nonce);
+    progress.miningCompleted = true;
+    progress.status = 'completed';
+
+    // Points selon le nombre de tentatives
+    let miningPoints = 0;
+    if (progress.miningAttempts <= 3) miningPoints = 20;
+    else if (progress.miningAttempts <= 6) miningPoints = 10;
+    else miningPoints = 5;
+
+    progress.totalScore += miningPoints;
+  }
+
+  res.json({
+    ok: true,
+    correct,
+    attempts: progress.miningAttempts,
+    maxAttempts: 10,
+    completed: progress.miningCompleted,
+    classroom,
+    progress
+  });
+});
+
+// POST /api/class/:code/solo/start-dao - Démarrer le vote DAO final
+app.post('/api/class/:code/solo/start-dao', (req, res) => {
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom || classroom.mode !== 'solo') {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  // Récupérer tous les joueurs qui ont terminé (status = 'completed')
+  const completedPlayers = Object.keys(classroom.playerProgress).filter(name =>
+    classroom.playerProgress[name].status === 'completed'
+  );
+
+  if (completedPlayers.length < 2) {
+    return res.status(400).json({ error: 'Pas assez de joueurs ont terminé pour le vote DAO' });
+  }
+
+  classroom.status = 'dao-voting';
+  classroom.daoVotes = {};
+
+  res.json({
+    ok: true,
+    classroom,
+    completedPlayers
+  });
+});
+
+// POST /api/class/:code/solo/dao-vote - Vote DAO individuel en mode solo
+app.post('/api/class/:code/solo/dao-vote', (req, res) => {
+  const { voterName, targetName, voteType } = req.body;
+  const classroom = classrooms.get(req.params.code.toUpperCase());
+
+  if (!classroom || classroom.mode !== 'solo') {
+    return res.status(404).json({ error: 'Classe non trouvée' });
+  }
+
+  if (classroom.status !== 'dao-voting') {
+    return res.status(400).json({ error: 'Vote DAO non actif' });
+  }
+
+  // Vérifier que le votant a terminé
+  const voterProgress = classroom.playerProgress[voterName];
+  if (!voterProgress || voterProgress.status !== 'completed') {
+    return res.status(400).json({ error: 'Vous n\'avez pas terminé le challenge' });
+  }
+
+  // Vérifier que la cible a terminé
+  const targetProgress = classroom.playerProgress[targetName];
+  if (!targetProgress || targetProgress.status !== 'completed') {
+    return res.status(400).json({ error: 'Cible non valide' });
+  }
+
+  if (voterName === targetName) {
+    return res.status(400).json({ error: 'Vous ne pouvez pas voter pour vous-même' });
+  }
+
+  // Initialiser les votes du votant
+  if (!classroom.daoVotes[voterName]) {
+    classroom.daoVotes[voterName] = {};
+  }
+
+  // Enregistrer le vote
+  classroom.daoVotes[voterName][targetName] = voteType;
+
+  // Récupérer tous les joueurs qui ont terminé
+  const completedPlayers = Object.keys(classroom.playerProgress).filter(name =>
+    classroom.playerProgress[name].status === 'completed'
+  );
+
+  // Vérifier si tous ont voté pour tous les autres
+  const allVoted = completedPlayers.every(voter => {
+    const voterVotes = classroom.daoVotes[voter] || {};
+    const expectedVotes = completedPlayers.filter(p => p !== voter).length;
+    return Object.keys(voterVotes).length === expectedVotes;
+  });
+
+  if (allVoted) {
+    // Calculer les scores finaux
+    classroom.finalScores = {};
+
+    completedPlayers.forEach(player => {
+      let finalScore = classroom.playerProgress[player].totalScore;
+
+      // Appliquer les votes reçus
+      completedPlayers.forEach(voter => {
+        if (voter !== player && classroom.daoVotes[voter]?.[player]) {
+          const voterScore = classroom.playerProgress[voter].totalScore;
+          const weight = Math.floor(voterScore / 10);
+          const voteType = classroom.daoVotes[voter][player];
+
+          if (voteType === 'for') {
+            finalScore += weight * 3;
+          } else if (voteType === 'against') {
+            finalScore -= weight;
+          }
+        }
+      });
+
+      classroom.finalScores[player] = finalScore;
+    });
+
+    // Créer le classement final
+    const rankings = completedPlayers.map(player => ({
+      name: player,
+      initialScore: classroom.playerProgress[player].totalScore,
+      votesFor: completedPlayers.filter(v => classroom.daoVotes[v]?.[player] === 'for').length,
+      votesAgainst: completedPlayers.filter(v => classroom.daoVotes[v]?.[player] === 'against').length,
+      finalScore: classroom.finalScores[player]
+    })).sort((a, b) => b.finalScore - a.finalScore);
+
+    classroom.finalRankings = rankings;
+    classroom.status = 'completed';
+  }
+
+  res.json({
+    ok: true,
+    classroom
   });
 });
 

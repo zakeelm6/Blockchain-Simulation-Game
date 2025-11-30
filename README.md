@@ -4,13 +4,32 @@ Jeu éducatif interactif pour apprendre les concepts de la blockchain à travers
 
 ## ✨ Fonctionnalités Principales
 
-### Mode Solo Complet
+### 🎮 Mode Solo Complet
 - **100 Smart Contracts** : Base de données de 50 contrats valides et 50 invalides
 - **Validation par Bots** : 8 validateurs automatisés analysent votre choix
 - **Mining Challenge** : Trouvez le nonce avec Proof of Work simplifié
 - **Vote DAO** : Système de gouvernance décentralisée avec votes pondérés
 - **Système de Points** : Accumulation de points à travers les 3 étapes
 - **Badges et Achievements** : Débloquez des badges selon vos performances
+
+### 🎓 Mode Classe (2 variantes)
+
+#### Mode Équipe
+- **Groupes automatiques** : Formation de groupes de 4 (3 votants + 1 validateur)
+- **Vote en équipe** : Les 3 membres votent pour choisir le smart contract
+- **Validation croisée** : Chaque validateur évalue les choix des autres équipes
+- **Mining collaboratif** : Top 20% des équipes qualifiées, 40 tentatives par équipe (10/membre)
+- **Vote DAO final** : Top 2 équipes participent au vote individuel pondéré
+- **Classement final** : Podium et résultats détaillés
+
+#### Mode Solo en Classe
+- **Responsable** : Crée une classe et obtient un code à partager
+- **Joueurs indépendants** : Chaque participant progresse à son rythme
+- **Validation bot** : 8 bots évaluent le choix (min 2 pour continuer)
+- **Mining individuel** : 10 tentatives, nonce 0-20
+- **Élimination** : Les joueurs peuvent être éliminés mais sauvegardent leur progression
+- **Tableau de bord** : Le responsable voit la progression de tous en temps réel
+- **Vote DAO final** : Seuls les joueurs ayant terminé participent
 
 ### Technologies
 - **Frontend** : React 18 + Vite + CSS moderne avec animations
@@ -178,6 +197,85 @@ docker-compose -f docker-compose.prod.yml up --build
 | **Vote DAO** | Vote CONTRE reçu | -(score votant ÷ 10) |
 
 **Score maximum théorique** : ~130+ points (selon les votes DAO)
+
+## 🎓 Déroulement du Mode Classe
+
+### Mode Équipe
+
+#### 1️⃣ Création et Inscription
+- **Responsable** : Crée la classe, obtient un code 6 caractères
+- **Participants** : Rejoignent avec le code et leur nom
+- **Formation** : Groupes de 4 automatiques (3 votants + 1 validateur)
+
+#### 2️⃣ Vote en Équipe
+- Les 3 votants choisissent parmi les smart contracts proposés
+- Vote majoritaire détermine le choix de l'équipe
+- Chaque équipe a son logo et son nom
+
+#### 3️⃣ Validation Croisée
+- Chaque validateur évalue les choix des **autres** équipes
+- **Points** : +5 si validation correcte, -3 si incorrecte
+- Équipes gagnent +10 pour un bon choix de contrat
+
+#### 4️⃣ Mining Collaboratif
+- **Qualification** : Top 20% des équipes (minimum 1)
+- **Nonce** : Entre 0 et 100
+- **Tentatives** : 10 par membre, 40 total pour une équipe de 4
+- **Points selon le rang** :
+  - 1ère équipe : **+30 points**
+  - 2ème équipe : **+20 points**
+  - 3ème équipe : **+15 points**
+  - 4ème équipe : **+10 points**
+  - Autres : **+5 points**
+
+#### 5️⃣ Vote DAO Final
+- **Qualification** : Top 2 équipes uniquement
+- **Vote individuel** : Chaque membre vote pour/contre les autres membres
+- **Poids** : Score d'équipe ÷ nombre de membres + bonus mineur
+- **Calcul** : Vote POUR = +3×poids, Vote CONTRE = -1×poids
+
+#### 6️⃣ Résultats Finaux
+- Podium des 3 premiers
+- Classement complet avec scores
+- Statistiques de la classe
+
+### Mode Solo en Classe
+
+#### 1️⃣ Création et Inscription
+- **Responsable** : Crée la classe en mode "Solo", obtient un code
+- **Joueurs** : Rejoignent individuellement et commencent immédiatement
+
+#### 2️⃣ Choix du Smart Contract
+- 2 contrats proposés (1 valide, 1 invalide)
+- 8 bots valident le choix
+- **Élimination** : Si moins de 2 bots approuvent
+- **Points** : +10 pour bon choix
+
+#### 3️⃣ Mining Challenge
+- **Nonce** : Entre 0 et 20
+- **Tentatives** : 10 maximum
+- **Élimination** : Si toutes les tentatives épuisées
+- **Points** :
+  - ≤3 tentatives : **+20 points**
+  - 4-6 tentatives : **+10 points**
+  - 7-10 tentatives : **+5 points**
+
+#### 4️⃣ Tableau de Bord Responsable
+- Vue en temps réel de tous les joueurs
+- Statistiques : En choix, en mining, terminés, éliminés
+- Détails : Contrat choisi, validations, tentatives, score
+- Bouton pour lancer le vote DAO quand ≥2 joueurs terminés
+
+#### 5️⃣ Vote DAO Final
+- **Participants** : Uniquement les joueurs ayant terminé
+- **Vote** : Chacun vote POUR/CONTRE les autres
+- **Poids** : Score accumulé ÷ 10
+- **Calcul** : Vote POUR = +3×poids, Vote CONTRE = -1×poids
+
+#### 6️⃣ Résultats Finaux
+- Podium des 3 premiers
+- Classement complet
+- Détails des votes et scores
 
 ## 🧠 Concepts Blockchain Enseignés
 
