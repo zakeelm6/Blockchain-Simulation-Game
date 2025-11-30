@@ -6,13 +6,19 @@ import { VotingChallenge } from './VotingChallenge';
 import { LandingPage } from './LandingPage';
 
 function App() {
-  const [step, setStep] = useState('landing'); // 'landing' | 'solo' | 'soloContracts' | 'mining' | 'voting'
+  const [step, setStep] = useState('landing'); // 'landing' | 'solo' | 'soloContracts' | 'mining' | 'voting' | 'results'
   const [soloPlayerName, setSoloPlayerName] = useState('');
   const [playerScore, setPlayerScore] = useState(0);
+  const [gameHistory, setGameHistory] = useState({
+    validation: null,
+    mining: null,
+    voting: null
+  });
 
   function goToSolo() {
     setStep('solo');
     setPlayerScore(0); // Réinitialiser le score
+    setGameHistory({ validation: null, mining: null, voting: null });
   }
 
   function goToLanding() {
@@ -35,6 +41,15 @@ function App() {
     }
     points += (validationResult.validVotes || 0) * 2; // +2 par validateur
 
+    setGameHistory(prev => ({
+      ...prev,
+      validation: {
+        correct: validationResult.correct,
+        validVotes: validationResult.validVotes,
+        points
+      }
+    }));
+
     setPlayerScore(prev => prev + points);
     setStep('mining');
   }
@@ -53,14 +68,25 @@ function App() {
       points = 5;
     }
 
+    setGameHistory(prev => ({
+      ...prev,
+      mining: {
+        attempts: miningResult.attempts,
+        points
+      }
+    }));
+
     setPlayerScore(prev => prev + points);
     setStep('voting');
   }
 
-  function handleVotingComplete(finalData) {
-    // Afficher les résultats finaux
-    alert(`🎉 Challenge terminé ${soloPlayerName} !\n\n🏆 Classement final : #${finalData.rank || 'N/A'}\n💰 Score final : ${finalData.finalScore} points\n\nMerci d'avoir participé !`);
-    goToLanding();
+  function handleVotingComplete(votingData) {
+    // Stocker les données du vote
+    setGameHistory(prev => ({
+      ...prev,
+      voting: votingData
+    }));
+    setStep('results');
   }
 
   console.log('App step', step);

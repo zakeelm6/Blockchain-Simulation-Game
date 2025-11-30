@@ -14,11 +14,13 @@ const PARTICIPANTS = [
 export function VotingChallenge({ playerName, playerScore, onComplete, onBack }) {
   const [participants, setParticipants] = useState([]);
   const [votes, setVotes] = useState({});
-  const [currentParticipantIndex, setCurrentParticipantIndex] = useState(0);
+  const [playerVotingComplete, setPlayerVotingComplete] = useState(false);
+  const [botsVoting, setBotsVoting] = useState(false);
   const [votingComplete, setVotingComplete] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [finalRankings, setFinalRankings] = useState([]);
   const [animatingVote, setAnimatingVote] = useState(null);
+  const [currentBotVoting, setCurrentBotVoting] = useState(null);
 
   useEffect(() => {
     // Initialiser les participants avec le joueur
@@ -29,41 +31,75 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
     setParticipants(allParticipants);
   }, [playerName, playerScore]);
 
-  const currentParticipant = participants[currentParticipantIndex];
-  const votingParticipants = participants.filter((p, idx) => idx !== currentParticipantIndex);
+  // Générer les votes automatiques des bots
+  function generateBotVotes() {
+    const newVotes = { ...votes };
+    const bots = participants.filter(p => !p.isPlayer);
 
-  function handleVote(targetId, voteType) {
+    bots.forEach(bot => {
+      newVotes[bot.id] = {};
+      // Voter pour tous les autres participants sauf soi-même
+      participants.forEach(target => {
+        if (target.id !== bot.id) {
+          // Vote aléatoire : 60% pour, 40% contre
+          const voteType = Math.random() < 0.6 ? 'for' : 'against';
+          newVotes[bot.id][target.id] = voteType;
+        }
+      });
+    });
+
+    return newVotes;
+  }
+
+  // Animer les votes des bots
+  function animateBotsVoting() {
+    setBotsVoting(true);
+    const bots = participants.filter(p => !p.isPlayer);
+    let currentBotIndex = 0;
+
+    const interval = setInterval(() => {
+      if (currentBotIndex < bots.length) {
+        setCurrentBotVoting(bots[currentBotIndex]);
+        currentBotIndex++;
+      } else {
+        clearInterval(interval);
+        setCurrentBotVoting(null);
+        setTimeout(() => {
+          setVotingComplete(true);
+          const allVotes = generateBotVotes();
+          setVotes(allVotes);
+          calculateResults(allVotes);
+        }, 300);
+      }
+    }, 300);
+  }
+
+  // Vote du joueur seulement
+  function handlePlayerVote(targetId, voteType) {
     setAnimatingVote({ targetId, voteType });
 
     setTimeout(() => {
       const newVotes = { ...votes };
-      if (!newVotes[currentParticipant.id]) {
-        newVotes[currentParticipant.id] = {};
+      if (!newVotes['player']) {
+        newVotes['player'] = {};
       }
-      newVotes[currentParticipant.id][targetId] = voteType;
+      newVotes['player'][targetId] = voteType;
       setVotes(newVotes);
       setAnimatingVote(null);
 
-      // Vérifier si tous les votes sont terminés pour ce participant
-      const votedCount = Object.keys(newVotes[currentParticipant.id] || {}).length;
+      // Vérifier si le joueur a voté pour tous les autres participants
+      const votedCount = Object.keys(newVotes['player'] || {}).length;
       if (votedCount === participants.length - 1) {
-        // Passer au participant suivant ou terminer
-        if (currentParticipantIndex < participants.length - 1) {
-          setTimeout(() => {
-            setCurrentParticipantIndex(currentParticipantIndex + 1);
-          }, 500);
-        } else {
-          // Tous les participants ont voté
-          setTimeout(() => {
-            setVotingComplete(true);
-            calculateResults();
-          }, 1000);
-        }
+        // Le joueur a terminé, lancer les votes des bots
+        setTimeout(() => {
+          setPlayerVotingComplete(true);
+          animateBotsVoting();
+        }, 300);
       }
-    }, 800);
+    }, 400);
   }
 
-  function calculateResults() {
+  function calculateResults(allVotes) {
     // Calculer les scores finaux basés sur les votes
     const scores = {};
 
@@ -72,9 +108,9 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
     });
 
     // Appliquer les votes
-    Object.keys(votes).forEach(voterId => {
+    Object.keys(allVotes).forEach(voterId => {
       const voterScore = participants.find(p => p.id === voterId)?.initialScore || 0;
-      const voterVotes = votes[voterId];
+      const voterVotes = allVotes[voterId];
 
       Object.keys(voterVotes).forEach(targetId => {
         const voteType = voterVotes[targetId];
@@ -93,8 +129,8 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
       ...p,
       finalScore: scores[p.id] || p.initialScore,
       votesReceived: {
-        for: Object.values(votes).filter(v => v[p.id] === 'for').length,
-        against: Object.values(votes).filter(v => v[p.id] === 'against').length
+        for: Object.values(allVotes).filter(v => v[p.id] === 'for').length,
+        against: Object.values(allVotes).filter(v => v[p.id] === 'against').length
       }
     }));
 
@@ -106,11 +142,30 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
     }, 1500);
   }
 
-  if (!currentParticipant) {
+  if (participants.length === 0) {
     return (
       <section className="card">
         <div className="spinner"></div>
         <p className="muted small">Initialisation du vote...</p>
+      </section>
+    );
+  }
+
+  // Animation des votes des bots
+  if (botsVoting) {
+    return (
+      <section className="card">
+        <h2>🤖 Votes des validateurs en cours...</h2>
+        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+          {currentBotVoting && (
+            <>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>{currentBotVoting.avatar}</div>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>{currentBotVoting.name}</h3>
+              <p className="muted small">Vote en cours...</p>
+            </>
+          )}
+          <div className="spinner" style={{ marginTop: '20px' }}></div>
+        </div>
       </section>
     );
   }
@@ -188,44 +243,46 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
     );
   }
 
-  const votedFor = votes[currentParticipant.id] || {};
+  const player = participants.find(p => p.isPlayer);
+  const bots = participants.filter(p => !p.isPlayer);
+  const votedFor = votes['player'] || {};
   const votedCount = Object.keys(votedFor).length;
-  const totalToVote = participants.length - 1;
+  const totalToVote = bots.length;
 
   return (
     <section className="card">
       <h2>🗳️ Vote DAO - Gouvernance décentralisée</h2>
       <p className="muted small">
-        Votez POUR ou CONTRE chaque participant. Le poids de votre vote dépend de votre score.
+        Votez POUR ou CONTRE chaque validateur. Le poids de votre vote dépend de votre score.
       </p>
 
-      {/* Participant actuel qui vote */}
+      {/* Joueur qui vote */}
       <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '8px', textAlign: 'center' }}>
-        <div style={{ fontSize: '2rem' }}>{currentParticipant.avatar}</div>
-        <h3 style={{ margin: '8px 0 4px', fontSize: '1rem' }}>{currentParticipant.name}</h3>
+        <div style={{ fontSize: '2rem' }}>{player?.avatar}</div>
+        <h3 style={{ margin: '8px 0 4px', fontSize: '1rem' }}>{player?.name}</h3>
         <p className="small muted" style={{ margin: 0 }}>
-          Score: {currentParticipant.initialScore} points | Poids du vote: ×{Math.floor(currentParticipant.initialScore / 10)}
+          Score: {player?.initialScore} points | Poids du vote: ×{Math.floor((player?.initialScore || 0) / 10)}
         </p>
         <p className="small" style={{ marginTop: '8px' }}>
           Progression: {votedCount}/{totalToVote} votes effectués
         </p>
       </div>
 
-      {/* Cercle des participants */}
+      {/* Cercle des validateurs bots */}
       <div style={{ marginTop: '24px', position: 'relative', height: '400px' }}>
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          {votingParticipants.map((participant, index) => {
-            const angle = (index / votingParticipants.length) * 2 * Math.PI - Math.PI / 2;
+          {bots.map((bot, index) => {
+            const angle = (index / bots.length) * 2 * Math.PI - Math.PI / 2;
             const radius = 150;
             const x = Math.cos(angle) * radius;
             const y = Math.sin(angle) * radius;
 
-            const hasVoted = votedFor[participant.id];
-            const isAnimating = animatingVote?.targetId === participant.id;
+            const hasVoted = votedFor[bot.id];
+            const isAnimating = animatingVote?.targetId === bot.id;
 
             return (
               <div
-                key={participant.id}
+                key={bot.id}
                 style={{
                   position: 'absolute',
                   left: '50%',
@@ -238,13 +295,13 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
                   style={{
                     padding: '12px',
                     background: hasVoted
-                      ? votedFor[participant.id] === 'for'
+                      ? votedFor[bot.id] === 'for'
                         ? 'rgba(74, 222, 128, 0.2)'
                         : 'rgba(248, 113, 113, 0.2)'
                       : 'rgba(15, 23, 42, 0.8)',
                     border: `2px solid ${
                       hasVoted
-                        ? votedFor[participant.id] === 'for'
+                        ? votedFor[bot.id] === 'for'
                           ? '#4ade80'
                           : '#f87171'
                         : 'rgba(148, 163, 184, 0.3)'
@@ -255,19 +312,19 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
                     animation: isAnimating ? 'pulse 0.8s ease-in-out' : 'none'
                   }}
                 >
-                  <div style={{ fontSize: '1.5rem' }}>{participant.avatar}</div>
+                  <div style={{ fontSize: '1.5rem' }}>{bot.avatar}</div>
                   <div style={{ fontSize: '0.7rem', marginTop: '4px', fontWeight: hasVoted ? '600' : '400' }}>
-                    {participant.name.split('-')[0]}
+                    {bot.name.split('-')[0]}
                   </div>
                   {hasVoted && (
                     <div style={{ fontSize: '1rem', marginTop: '4px' }}>
-                      {votedFor[participant.id] === 'for' ? '✅' : '❌'}
+                      {votedFor[bot.id] === 'for' ? '✅' : '❌'}
                     </div>
                   )}
                   {!hasVoted && !isAnimating && (
                     <div style={{ marginTop: '8px', display: 'flex', gap: '4px', justifyContent: 'center' }}>
                       <button
-                        onClick={() => handleVote(participant.id, 'for')}
+                        onClick={() => handlePlayerVote(bot.id, 'for')}
                         style={{
                           padding: '4px 8px',
                           fontSize: '0.7rem',
@@ -279,7 +336,7 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
                         ✓
                       </button>
                       <button
-                        onClick={() => handleVote(participant.id, 'against')}
+                        onClick={() => handlePlayerVote(bot.id, 'against')}
                         style={{
                           padding: '4px 8px',
                           fontSize: '0.7rem',
@@ -297,7 +354,7 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
             );
           })}
 
-          {/* Participant central (qui vote) */}
+          {/* Joueur au centre */}
           <div
             style={{
               position: 'absolute',
@@ -317,7 +374,7 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
               boxShadow: '0 0 30px rgba(56, 189, 248, 0.5)'
             }}
           >
-            {currentParticipant.avatar}
+            {player?.avatar}
           </div>
         </div>
       </div>

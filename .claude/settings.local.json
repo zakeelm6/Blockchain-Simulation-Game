@@ -9,7 +9,9 @@
       "Bash(chcp)",
       "Bash(timeout 3 node:*)",
       "Bash(npm install)",
-      "Bash(PORT=4001 timeout 2 node:*)"
+      "Bash(PORT=4001 timeout 2 node:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx vite build:*)"
     ],
     "deny": [],
     "ask": []

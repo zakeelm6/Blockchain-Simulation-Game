@@ -10,8 +10,7 @@ const BLOCKCHAIN_QUESTIONS = [
       "Un nœud du réseau",
       "Un portefeuille numérique"
     ],
-    correctIndex: 0,
-    hint: "Le nonce est inférieur à 10"
+    correctIndex: 0
   },
   {
     id: 2,
@@ -22,8 +21,7 @@ const BLOCKCHAIN_QUESTIONS = [
       "Preuve de propriété",
       "Preuve de richesse"
     ],
-    correctIndex: 1,
-    hint: "Le nonce est un nombre pair"
+    correctIndex: 1
   },
   {
     id: 3,
@@ -34,10 +32,42 @@ const BLOCKCHAIN_QUESTIONS = [
       "Un type de token",
       "Une adresse de portefeuille"
     ],
-    correctIndex: 1,
-    hint: "Le nonce est supérieur à 10"
+    correctIndex: 1
   }
 ];
+
+// Fonction pour générer un indice basé sur le nonce réel
+function generateHint(nonce) {
+  const hints = [];
+
+  // Indice sur la plage
+  if (nonce < 5) {
+    hints.push("Le nonce est inférieur à 5");
+  } else if (nonce < 10) {
+    hints.push("Le nonce est entre 5 et 9");
+  } else if (nonce < 15) {
+    hints.push("Le nonce est entre 10 et 14");
+  } else {
+    hints.push("Le nonce est entre 15 et 20");
+  }
+
+  // Indice sur parité
+  if (nonce % 2 === 0) {
+    hints.push("Le nonce est un nombre pair");
+  } else {
+    hints.push("Le nonce est un nombre impair");
+  }
+
+  // Indice sur divisibilité
+  if (nonce % 5 === 0 && nonce !== 0) {
+    hints.push("Le nonce est divisible par 5");
+  } else if (nonce % 3 === 0 && nonce !== 0) {
+    hints.push("Le nonce est divisible par 3");
+  }
+
+  // Retourner un indice aléatoire parmi les vrais indices
+  return hints[Math.floor(Math.random() * hints.length)];
+}
 
 export function MiningChallenge({ playerName, onComplete, onBack }) {
   const [blockData, setBlockData] = useState(null);
@@ -51,6 +81,7 @@ export function MiningChallenge({ playerName, onComplete, onBack }) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [targetNonce, setTargetNonce] = useState(0);
   const [attemptHistory, setAttemptHistory] = useState([]);
+  const [hint, setHint] = useState('');
 
   useEffect(() => {
     initializeChallenge();
@@ -64,6 +95,10 @@ export function MiningChallenge({ playerName, onComplete, onBack }) {
     // Générer un nonce aléatoire entre 0 et 20
     const nonce = Math.floor(Math.random() * 21);
     setTargetNonce(nonce);
+
+    // Générer l'indice basé sur le nonce réel
+    const generatedHint = generateHint(nonce);
+    setHint(generatedHint);
 
     // Données du bloc à miner
     const block = {
@@ -116,6 +151,7 @@ export function MiningChallenge({ playerName, onComplete, onBack }) {
     } else {
       setMessage('❌ Mauvaise réponse. Vous pouvez continuer sans indice.');
       setHintUnlocked(true);
+      setShowHint(false); // Ne pas afficher l'indice si mauvaise réponse
     }
   }
 
@@ -128,7 +164,11 @@ export function MiningChallenge({ playerName, onComplete, onBack }) {
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // Convert to 32bit integer
     }
-    return Math.abs(hash).toString(16).padStart(8, '0');
+    return Math.abs(hash).toString(16).padStart(64, '0');
+  }
+
+  function getBlockHash(nonce) {
+    return '0x' + calculateHash(nonce);
   }
 
   function handleMineAttempt() {
@@ -195,21 +235,108 @@ export function MiningChallenge({ playerName, onComplete, onBack }) {
         Trouvez le bon nonce pour miner ce bloc et ajouter vos transactions à la blockchain.
       </p>
 
-      {/* Informations du bloc */}
-      <div className="block-info" style={{ marginTop: '16px', padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
-        <h3 style={{ fontSize: '0.9rem', marginTop: 0 }}>📦 Bloc #{blockData.index}</h3>
-        <div style={{ fontSize: '0.75rem', lineHeight: '1.6' }}>
-          <div><strong>Timestamp:</strong> {new Date(blockData.timestamp).toLocaleString()}</div>
-          <div><strong>Hash précédent:</strong> <code style={{ fontSize: '0.7rem' }}>{blockData.previousHash.substring(0, 20)}...</code></div>
-          <div><strong>Difficulté:</strong> {blockData.difficulty}</div>
-          <div style={{ marginTop: '8px' }}><strong>Transactions:</strong></div>
-          <ul style={{ paddingLeft: '20px', margin: '4px 0' }}>
-            {blockData.transactions.map((tx, idx) => (
-              <li key={idx}>
-                {tx.from} → {tx.to}: {tx.amount} tokens (frais: {tx.fee})
-              </li>
-            ))}
-          </ul>
+      {/* Bloc de blockchain visuel */}
+      <div style={{ marginTop: '16px', border: '2px solid var(--accent)', borderRadius: '12px', overflow: 'hidden' }}>
+        {/* En-tête du bloc */}
+        <div style={{ background: 'var(--accent)', padding: '12px', textAlign: 'center' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', color: '#0f172a' }}>⛓️ BLOC #{blockData.index}</h3>
+        </div>
+
+        {/* Contenu du bloc */}
+        <div style={{ background: 'rgba(15, 23, 42, 0.9)', padding: '16px' }}>
+          {/* Données du bloc */}
+          <div style={{ fontSize: '0.8rem', lineHeight: '1.8', fontFamily: 'monospace' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '8px' }}>
+              <div style={{ color: '#94a3b8' }}>Block Height:</div>
+              <div style={{ color: '#38bdf8', fontWeight: '600' }}>{blockData.index}</div>
+
+              <div style={{ color: '#94a3b8' }}>Timestamp:</div>
+              <div style={{ color: '#38bdf8' }}>{blockData.timestamp}</div>
+
+              <div style={{ color: '#94a3b8' }}>Date/Time:</div>
+              <div style={{ color: '#38bdf8' }}>{new Date(blockData.timestamp).toLocaleString()}</div>
+
+              <div style={{ color: '#94a3b8' }}>Previous Hash:</div>
+              <div style={{ color: '#f472b6', wordBreak: 'break-all', fontSize: '0.7rem' }}>{blockData.previousHash}</div>
+
+              <div style={{ color: '#94a3b8' }}>Difficulty:</div>
+              <div style={{ color: '#38bdf8' }}>{blockData.difficulty}</div>
+
+              <div style={{ color: '#94a3b8' }}>Nonce:</div>
+              <div style={{ color: '#fbbf24', fontWeight: '700' }}>
+                {isSuccess ? targetNonce : '???'}
+                {!isSuccess && <span style={{ marginLeft: '8px', color: '#94a3b8', fontSize: '0.75rem' }}>(à trouver)</span>}
+              </div>
+            </div>
+
+            {/* Transactions */}
+            <div style={{ marginTop: '16px', borderTop: '1px solid rgba(148, 163, 184, 0.2)', paddingTop: '12px' }}>
+              <div style={{ color: '#94a3b8', marginBottom: '8px' }}>Transactions ({blockData.transactions.length}):</div>
+              {blockData.transactions.map((tx, idx) => (
+                <div key={idx} style={{
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  padding: '8px',
+                  borderRadius: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid rgba(56, 189, 248, 0.3)'
+                }}>
+                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>TX #{idx + 1}</div>
+                  <div style={{ color: '#38bdf8', fontSize: '0.75rem' }}>
+                    <span style={{ color: '#4ade80' }}>{tx.from}</span>
+                    {' → '}
+                    <span style={{ color: '#f472b6' }}>{tx.to}</span>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#fbbf24' }}>
+                    Amount: {tx.amount} tokens | Fee: {tx.fee} tokens
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Hash du bloc (affiché après succès) */}
+            {isSuccess && (
+              <div style={{ marginTop: '16px', borderTop: '1px solid rgba(148, 163, 184, 0.2)', paddingTop: '12px' }}>
+                <div style={{ color: '#94a3b8', marginBottom: '8px' }}>Block Hash:</div>
+                <div style={{
+                  background: 'rgba(74, 222, 128, 0.2)',
+                  padding: '10px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(74, 222, 128, 0.5)',
+                  wordBreak: 'break-all',
+                  fontSize: '0.7rem',
+                  color: '#4ade80',
+                  fontWeight: '600'
+                }}>
+                  {getBlockHash(targetNonce)}
+                </div>
+                <div style={{ fontSize: '0.65rem', color: '#4ade80', marginTop: '4px', textAlign: 'center' }}>
+                  ✓ Bloc validé avec nonce = {targetNonce}
+                </div>
+              </div>
+            )}
+
+            {/* Hash en cours (pendant les tentatives) */}
+            {!isSuccess && attemptHistory.length > 0 && (
+              <div style={{ marginTop: '16px', borderTop: '1px solid rgba(148, 163, 184, 0.2)', paddingTop: '12px' }}>
+                <div style={{ color: '#94a3b8', marginBottom: '8px' }}>Dernier hash tenté:</div>
+                <div style={{
+                  background: 'rgba(248, 113, 113, 0.2)',
+                  padding: '10px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(248, 113, 113, 0.5)',
+                  wordBreak: 'break-all',
+                  fontSize: '0.7rem',
+                  color: '#f87171',
+                  fontWeight: '600'
+                }}>
+                  0x{attemptHistory[0].hash}
+                </div>
+                <div style={{ fontSize: '0.65rem', color: '#f87171', marginTop: '4px', textAlign: 'center' }}>
+                  ✗ Hash invalide avec nonce = {attemptHistory[0].nonce}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -257,7 +384,7 @@ export function MiningChallenge({ playerName, onComplete, onBack }) {
       {/* Indice */}
       {showHint && (
         <div className="notice success-notice" style={{ marginTop: '12px' }}>
-          💡 <strong>Indice :</strong> {question.hint}
+          💡 <strong>Indice :</strong> {hint}
         </div>
       )}
 
