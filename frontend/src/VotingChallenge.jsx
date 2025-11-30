@@ -174,6 +174,14 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
     const playerRanking = finalRankings.findIndex(p => p.isPlayer) + 1;
     const playerData = finalRankings.find(p => p.isPlayer);
 
+    const votingResultData = {
+      ranking: playerRanking,
+      finalScore: playerData?.finalScore || 0,
+      votesFor: playerData?.votesReceived?.for || 0,
+      votesAgainst: playerData?.votesReceived?.against || 0,
+      totalParticipants: finalRankings.length
+    };
+
     return (
       <section className="card">
         <h2>🏆 Résultats du Vote DAO</h2>
@@ -222,8 +230,8 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
         </div>
 
         <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
-          <button onClick={() => onComplete?.(playerData)}>
-            Terminer le challenge
+          <button onClick={() => onComplete?.(votingResultData)}>
+            Voir le récapitulatif complet
           </button>
         </div>
       </section>

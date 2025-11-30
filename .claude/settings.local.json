@@ -11,7 +11,8 @@
       "Bash(npm install)",
       "Bash(PORT=4001 timeout 2 node:*)",
       "Bash(npm run build:*)",
-      "Bash(npx vite build:*)"
+      "Bash(npx vite build:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,57 +1,275 @@
-<<<<<<< HEAD
-# Blockchain-Simulation-Game
-=======
-# Blockchain Activity
+# Blockchain Simulation Game 🎮⛓️
 
-Application web interactive pour simuler deux activités autour de la blockchain: validation de smart contracts (Activité 1), phase de minting chronométrée, puis gouvernance type DAO avec votes pondérés (Activité 2).
+Jeu éducatif interactif pour apprendre les concepts de la blockchain à travers des défis pratiques : validation de smart contracts, mining proof-of-work, et gouvernance DAO.
 
-## Structure du projet
-- `blockchain.html` — Interface principale (toutes les vues) et styles.
-- `storage.js` — Constantes LocalStorage et helpers (chargement/sauvegarde, journal des votes, échappement HTML).
-- `activity1.js` — Logique Activité 1 (équipes, compteurs, total, éligibilité >= 2 validateurs).
-- `activity2.js` — Logique Activité 2 (tableau des scores, votes pondérés, journal, suppression d’entrées, calcul final + bonus/malus).
-- `main.js` — Routage des vues, initialisation, page Équipes (sélection crypto), page Minting (timer 4 min, attribution des bonus), événements.
-- `assets/` — Logos (club, cryptos `1.jpg` … `8.jpg`).
+## ✨ Fonctionnalités Principales
 
-## Lancer l’application
-1. Ouvrir le fichier `blockchain.html` dans un navigateur récent (Chrome, Edge, Firefox).
-2. Aucune dépendance serveur; tout est en JavaScript côté client avec `localStorage`.
+### Mode Solo Complet
+- **100 Smart Contracts** : Base de données de 50 contrats valides et 50 invalides
+- **Validation par Bots** : 8 validateurs automatisés analysent votre choix
+- **Mining Challenge** : Trouvez le nonce avec Proof of Work simplifié
+- **Vote DAO** : Système de gouvernance décentralisée avec votes pondérés
+- **Système de Points** : Accumulation de points à travers les 3 étapes
+- **Badges et Achievements** : Débloquez des badges selon vos performances
 
-## Flux utilisateur
-1. Accueil / Intro.
-2. Équipes: choisir une crypto (images `assets/1.jpg..8.jpg`), donner un nom d’équipe. Sauvegarde pour l’Activité 1.
-3. Activité 1: saisir les compteurs par équipe.
-   - Bon choix (+3)
-   - Validation réussie (+2)
-   - Validation erronée (−2)
-   - Validateurs (éligible si ≥ 2)
-4. Minting (4 min): sélectionner le statut par équipe éligible.
-   - 1er (+10), 2ème (+5), autres réussis (+1), échec (0)
-   - Appliquer les points → transfert vers Activité 2.
-5. Activité 2: votes pondérés par les points (tokens) accumulés.
-   - Pour = +3×tokens, Contre = −1×tokens
-   - Journal des votes (suppression par entrée possible, "Tout supprimer" rétablit les scores)
-   - Terminer les votes → Résultats finales
-6. Résultats finales: +5 à l’équipe la plus soutenue, −5 à la plus rejetée.
+### Technologies
+- **Frontend** : React 18 + Vite + CSS moderne avec animations
+- **Backend** : Node.js + Express + CORS
+- **Architecture** : SPA (Single Page Application) avec état géré par hooks
+- **Déploiement** : Docker + Docker Compose prêt pour production
 
-## Raccourcis de navigation
-- Barre supérieure: Accueil, Intro, Équipes, Activité 1, Minting, Activité 2, Tableau des scores, Résultats finales.
+## 📁 Structure du Projet
 
-## Persistance des données (LocalStorage)
-- Équipes Activité 1: `bc_activity1_teams_v1`
-- Équipes Activité 2 / Scoreboard: `bc_challenge_teams_v1`
-- Journal des votes (Activité 2): `bc_activity2_votes_log_v1`
+```
+.
+├── backend/                      # Serveur Node.js
+│   ├── server.js                 # API Express (validation, mining, voting)
+│   ├── smartContracts.js         # Base de 100 smart contracts
+│   ├── package.json              # Dépendances backend
+│   └── Dockerfile                # Image Docker backend
+│
+├── frontend/                     # Application React
+│   ├── src/
+│   │   ├── App.jsx               # Router principal et gestion d'état
+│   │   ├── LandingPage.jsx       # Page d'accueil
+│   │   ├── SoloGame.jsx          # Saisie du nom du joueur
+│   │   ├── SoloContractChoice.jsx # Choix de smart contract + validation
+│   │   ├── MiningChallenge.jsx   # Défi de mining avec PoW
+│   │   ├── VotingChallenge.jsx   # Vote DAO décentralisé
+│   │   ├── Results.jsx           # Récapitulatif complet du parcours
+│   │   ├── index.css             # Styles globaux avec thème sombre
+│   │   └── main.jsx              # Point d'entrée React
+│   ├── index.html
+│   ├── vite.config.js            # Configuration Vite
+│   ├── package.json              # Dépendances frontend
+│   └── Dockerfile                # Image Docker frontend
+│
+├── docker-compose.yml            # Orchestration dev
+├── docker-compose.prod.yml       # Orchestration production
+└── README.md                     # Documentation
+```
 
-## Notes d’implémentation
-- Suppression “Bloc complété” et “Mauvaise validation” en Activité 1.
-- Page Équipes avant Activité 1 pour associer un logo crypto (jpg) et un nom d’équipe.
-- Page Minting entre Activité 1 et 2 avec minuteur 4 min et attribution de bonus (10/5/1/0).
-- UI en français, thème clair, survol violet, mise en page full width.
+## 🚀 Installation et Démarrage
 
-## Déploiement
-- Dépôt GitHub: push tel quel; `blockchain.html` est la page d’entrée.
-- GitHub Pages / Netlify: définir `blockchain.html` comme page d’accueil (ou renommer en `index.html`).
+### Prérequis
 
-## Licence
-Indiquez ici la licence de votre choix (par ex. MIT).
->>>>>>> da472c8 (Ajout de tous les fichiers locaux)
+- **Node.js 18+** et **npm**
+- **Docker et Docker Compose** (optionnel, pour le déploiement)
+
+### Option 1 : Développement Local (Recommandé)
+
+1. **Clonez le dépôt** :
+   ```bash
+   git clone https://github.com/votre-utilisateur/Blockchain-Simulation-Game.git
+   cd Blockchain-Simulation-Game
+   ```
+
+2. **Installez les dépendances** :
+   ```bash
+   # Backend
+   cd backend
+   npm install
+
+   # Frontend
+   cd ../frontend
+   npm install
+   ```
+
+3. **Lancez l'application** :
+
+   **Terminal 1** (Backend) :
+   ```bash
+   cd backend
+   node server.js
+   # Serveur lancé sur http://localhost:4000
+   ```
+
+   **Terminal 2** (Frontend) :
+   ```bash
+   cd frontend
+   npm run dev
+   # Application disponible sur http://localhost:5173
+   ```
+
+4. **Accédez à l'application** : Ouvrez [http://localhost:5173](http://localhost:5173) dans votre navigateur
+
+### Option 2 : Démarrage avec Docker
+
+```bash
+# Mode développement
+docker-compose up --build
+
+# Mode production
+docker-compose -f docker-compose.prod.yml up --build
+```
+
+**Ports** :
+- Frontend : http://localhost:3000 (Docker) ou http://localhost:5173 (Vite)
+- Backend : http://localhost:4000
+
+## 🎮 Déroulement du Jeu (Mode Solo)
+
+### 1️⃣ Page d'Accueil
+- Présentation du jeu éducatif blockchain
+- Bouton "Mode Solo" pour commencer
+
+### 2️⃣ Saisie du Nom
+- Le joueur entre son nom
+- Animation de transition
+
+### 3️⃣ Validation Smart Contract (Étape 1)
+- **Choix** : 2 smart contracts proposés (1 valide, 1 invalide)
+- **Validation** : 8 bots analysent automatiquement votre choix
+- **Points** :
+  - Bon choix : **+10 points**
+  - Mauvais choix : **+3 points** (pour la tentative)
+  - **+2 points** par validateur en accord
+
+### 4️⃣ Mining Challenge (Étape 2)
+- **Question blockchain** : Répondez pour débloquer un indice
+- **Bloc visuel** : Visualisation complète du bloc (height, timestamp, hash, nonce, transactions)
+- **Trouvez le nonce** : Proof of Work simplifié (0-20)
+- **Points** :
+  - 1ère tentative : **+20 points** 🌟
+  - 2-3 tentatives : **+15 points**
+  - 4-6 tentatives : **+10 points**
+  - 7-10 tentatives : **+5 points**
+
+### 5️⃣ Vote DAO (Étape 3)
+- **Gouvernance décentralisée** : 9 participants (vous + 8 bots)
+- **Vote manuel** : Vous votez POUR ou CONTRE chaque bot
+- **Vote automatique** : Les bots votent ensuite automatiquement
+- **Votes pondérés** : Le poids dépend du score accumulé (score ÷ 10)
+- **Calcul** :
+  - Vote POUR : **+3 × poids**
+  - Vote CONTRE : **-1 × poids**
+
+### 6️⃣ Résultats du Vote
+- Classement final des 9 participants
+- Votre position (#1 à #9)
+- Détail des votes POUR et CONTRE reçus
+- Score final après votes
+
+### 7️⃣ Récapitulatif Complet
+- **Résumé du Vote DAO** : Classement, score, votes
+- **Récapitulatif des 3 étapes** :
+  - ✅ Validation Smart Contract
+  - ⛏️ Mining Challenge
+  - 🗳️ Vote DAO
+- **Score total** du parcours
+- **Badges obtenus** :
+  - 🎯 **Validateur Expert** (contrat correct)
+  - ⛏️ **Mineur Efficace** (≤3 tentatives)
+  - 🏆 **Top 3 DAO** (classement ≤3)
+  - ⭐ **Score d'Excellence** (score ≥100)
+
+## 🎯 Système de Points et Scoring
+
+| Étape | Action | Points |
+|-------|--------|--------|
+| **Validation** | Smart contract correct | +10 |
+| **Validation** | Smart contract incorrect | +3 |
+| **Validation** | Par validateur en accord | +2 |
+| **Mining** | 1ère tentative | +20 |
+| **Mining** | 2-3 tentatives | +15 |
+| **Mining** | 4-6 tentatives | +10 |
+| **Mining** | 7-10 tentatives | +5 |
+| **Vote DAO** | Vote POUR reçu | +(score votant ÷ 10) × 3 |
+| **Vote DAO** | Vote CONTRE reçu | -(score votant ÷ 10) |
+
+**Score maximum théorique** : ~130+ points (selon les votes DAO)
+
+## 🧠 Concepts Blockchain Enseignés
+
+- **Smart Contracts** : Identification de vulnérabilités (reentrancy, overflow, accès non autorisé)
+- **Proof of Work** : Minage de blocs avec recherche de nonce
+- **Hashing** : Calcul de hash de blocs (algorithme simplifié)
+- **DAO Governance** : Vote décentralisé avec pondération
+- **Consensus** : Validation par multiples nœuds (bots validateurs)
+- **Blockchain Structure** : Blocs, transactions, previous hash, timestamp
+
+## 🗄️ Données et Stockage
+
+- **Backend** : Stockage en mémoire (RAM) pendant la session
+- **Frontend** : État React local (hooks useState)
+- **Persistance** : Aucune (redémarrage = reset complet)
+- **Base de données** : 100 smart contracts hardcodés dans `smartContracts.js`
+
+## 🚀 Déploiement Production
+
+### Sur VPS (DigitalOcean, AWS EC2, etc.)
+
+1. **Prérequis** : Docker + Docker Compose installés
+2. **Clonez le repo** :
+   ```bash
+   git clone https://github.com/votre-utilisateur/Blockchain-Simulation-Game.git
+   cd Blockchain-Simulation-Game
+   ```
+3. **Lancez en production** :
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+4. **Configurez le reverse proxy** (Nginx) pour exposer le port 3000
+
+### Sur Plateformes Cloud
+Compatible avec :
+- **Heroku** : Buildpacks Node.js
+- **Vercel/Netlify** : Frontend uniquement (nécessite backend séparé)
+- **Google Cloud Run** : Containers Docker
+- **AWS ECS/Fargate** : Orchestration de containers
+- **DigitalOcean App Platform** : Déploiement automatique
+
+## 📝 Scripts Disponibles
+
+### Backend
+```bash
+npm start          # Lance le serveur Express (port 4000)
+```
+
+### Frontend
+```bash
+npm run dev        # Mode développement (Vite, port 5173)
+npm run build      # Build de production
+npm run preview    # Preview du build
+```
+
+## 🛠️ Stack Technique Détaillée
+
+### Frontend
+- **React 18** : Hooks (useState, useEffect)
+- **Vite 4.5** : Build ultra-rapide, HMR
+- **CSS Vanilla** : Variables CSS, animations, responsive
+- **Fetch API** : Requêtes HTTP vers le backend
+
+### Backend
+- **Express 4.21** : Framework Node.js
+- **CORS** : Cross-Origin Resource Sharing
+- **Body-parser** : Parsing JSON
+- **Architecture REST** : Endpoints `/api/...`
+
+### DevOps
+- **Docker** : Containerisation
+- **Docker Compose** : Orchestration multi-services
+- **Multi-stage builds** : Optimisation des images
+
+## 📄 Licence
+
+Projet éducatif sous **licence MIT**. Libre d'utilisation et modification.
+
+## 🤝 Contribution
+
+Les contributions sont bienvenues ! Pour contribuer :
+
+1. Fork le projet
+2. Créez une branche (`git checkout -b feature/AmazingFeature`)
+3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
+
+## 📧 Contact
+
+Pour toute question ou suggestion, ouvrez une **issue** sur GitHub.
+
+---
+
+**Développé avec ❤️ pour l'éducation blockchain**

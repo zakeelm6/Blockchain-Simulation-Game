@@ -3,6 +3,7 @@ import { SoloGame } from './SoloGame';
 import { SoloContractChoice } from './SoloContractChoice';
 import { MiningChallenge } from './MiningChallenge';
 import { VotingChallenge } from './VotingChallenge';
+import { Results } from './Results';
 import { LandingPage } from './LandingPage';
 
 function App() {
@@ -137,6 +138,14 @@ function App() {
             playerScore={playerScore}
             onComplete={handleVotingComplete}
             onBack={() => setStep('mining')}
+          />
+        )}
+
+        {step === 'results' && (
+          <Results
+            playerName={soloPlayerName}
+            gameHistory={gameHistory}
+            onBackToHome={goToLanding}
           />
         )}
       </main>
