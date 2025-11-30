@@ -1,0 +1,341 @@
+import React, { useState, useEffect } from 'react';
+
+const BLOCKCHAIN_QUESTIONS = [
+  {
+    id: 1,
+    question: "Qu'est-ce qu'un hash en blockchain ?",
+    options: [
+      "Une fonction mathématique qui transforme des données en une empreinte unique",
+      "Un type de cryptomonnaie",
+      "Un nœud du réseau",
+      "Un portefeuille numérique"
+    ],
+    correctIndex: 0,
+    hint: "Le nonce est inférieur à 10"
+  },
+  {
+    id: 2,
+    question: "Que signifie 'Proof of Work' ?",
+    options: [
+      "Preuve d'identité",
+      "Preuve de travail (calculs intensifs pour valider un bloc)",
+      "Preuve de propriété",
+      "Preuve de richesse"
+    ],
+    correctIndex: 1,
+    hint: "Le nonce est un nombre pair"
+  },
+  {
+    id: 3,
+    question: "Qu'est-ce qu'un nonce dans le minage ?",
+    options: [
+      "Un numéro de transaction",
+      "Un nombre arbitraire utilisé pour trouver un hash valide",
+      "Un type de token",
+      "Une adresse de portefeuille"
+    ],
+    correctIndex: 1,
+    hint: "Le nonce est supérieur à 10"
+  }
+];
+
+export function MiningChallenge({ playerName, onComplete, onBack }) {
+  const [blockData, setBlockData] = useState(null);
+  const [question, setQuestion] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showHint, setShowHint] = useState(false);
+  const [hintUnlocked, setHintUnlocked] = useState(false);
+  const [nonceInput, setNonceInput] = useState('');
+  const [attempts, setAttempts] = useState(10);
+  const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [targetNonce, setTargetNonce] = useState(0);
+  const [attemptHistory, setAttemptHistory] = useState([]);
+
+  useEffect(() => {
+    initializeChallenge();
+  }, []);
+
+  function initializeChallenge() {
+    // Choisir une question aléatoire
+    const randomQuestion = BLOCKCHAIN_QUESTIONS[Math.floor(Math.random() * BLOCKCHAIN_QUESTIONS.length)];
+    setQuestion(randomQuestion);
+
+    // Générer un nonce aléatoire entre 0 et 20
+    const nonce = Math.floor(Math.random() * 21);
+    setTargetNonce(nonce);
+
+    // Données du bloc à miner
+    const block = {
+      index: Math.floor(Math.random() * 1000) + 1,
+      timestamp: Date.now(),
+      transactions: [
+        {
+          from: "Alice",
+          to: "Bob",
+          amount: 50,
+          fee: 0.5
+        },
+        {
+          from: playerName || "Joueur",
+          to: "Charlie",
+          amount: 25,
+          fee: 0.25
+        }
+      ],
+      previousHash: generateRandomHash(),
+      difficulty: 2
+    };
+
+    setBlockData(block);
+  }
+
+  function generateRandomHash() {
+    const chars = '0123456789abcdef';
+    let hash = '0x';
+    for (let i = 0; i < 64; i++) {
+      hash += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return hash;
+  }
+
+  function handleAnswerSelect(index) {
+    setSelectedAnswer(index);
+  }
+
+  function handleSubmitAnswer() {
+    if (selectedAnswer === null) {
+      setMessage('⚠️ Veuillez sélectionner une réponse');
+      return;
+    }
+
+    if (selectedAnswer === question.correctIndex) {
+      setMessage('✅ Bonne réponse ! Vous avez débloqué un indice.');
+      setHintUnlocked(true);
+      setShowHint(true);
+    } else {
+      setMessage('❌ Mauvaise réponse. Vous pouvez continuer sans indice.');
+      setHintUnlocked(true);
+    }
+  }
+
+  function calculateHash(nonce) {
+    // Algorithme de hash simplifié (arbitraire pour le jeu)
+    const data = `${blockData.index}${blockData.timestamp}${blockData.previousHash}${nonce}`;
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+      const char = data.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(16).padStart(8, '0');
+  }
+
+  function handleMineAttempt() {
+    const nonce = parseInt(nonceInput, 10);
+
+    if (isNaN(nonce) || nonce < 0 || nonce > 20) {
+      setMessage('⚠️ Le nonce doit être un nombre entre 0 et 20');
+      return;
+    }
+
+    const hash = calculateHash(nonce);
+    const isCorrect = nonce === targetNonce;
+
+    const newAttempt = {
+      nonce,
+      hash,
+      isCorrect,
+      attemptNumber: 11 - attempts
+    };
+
+    setAttemptHistory([newAttempt, ...attemptHistory]);
+
+    if (isCorrect) {
+      setMessage(`🎉 Félicitations ! Vous avez trouvé le bon nonce : ${nonce}`);
+      setIsSuccess(true);
+      return;
+    }
+
+    const newAttempts = attempts - 1;
+    setAttempts(newAttempts);
+
+    if (newAttempts === 0) {
+      setMessage(`❌ Vous avez épuisé vos 10 tentatives. Le bon nonce était : ${targetNonce}`);
+    } else {
+      // Donner un indice de proximité
+      const diff = Math.abs(nonce - targetNonce);
+      if (diff === 1) {
+        setMessage(`🔥 Très chaud ! Il vous reste ${newAttempts} tentatives.`);
+      } else if (diff <= 3) {
+        setMessage(`🌡️ Chaud ! Il vous reste ${newAttempts} tentatives.`);
+      } else if (diff <= 5) {
+        setMessage(`❄️ Tiède. Il vous reste ${newAttempts} tentatives.`);
+      } else {
+        setMessage(`🧊 Froid. Il vous reste ${newAttempts} tentatives.`);
+      }
+    }
+
+    setNonceInput('');
+  }
+
+  if (!blockData || !question) {
+    return (
+      <section className="card">
+        <div className="spinner"></div>
+        <p className="muted small">Préparation du challenge de minage...</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="card">
+      <h2>⛏️ Mining Challenge</h2>
+      <p className="muted small">
+        Trouvez le bon nonce pour miner ce bloc et ajouter vos transactions à la blockchain.
+      </p>
+
+      {/* Informations du bloc */}
+      <div className="block-info" style={{ marginTop: '16px', padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
+        <h3 style={{ fontSize: '0.9rem', marginTop: 0 }}>📦 Bloc #{blockData.index}</h3>
+        <div style={{ fontSize: '0.75rem', lineHeight: '1.6' }}>
+          <div><strong>Timestamp:</strong> {new Date(blockData.timestamp).toLocaleString()}</div>
+          <div><strong>Hash précédent:</strong> <code style={{ fontSize: '0.7rem' }}>{blockData.previousHash.substring(0, 20)}...</code></div>
+          <div><strong>Difficulté:</strong> {blockData.difficulty}</div>
+          <div style={{ marginTop: '8px' }}><strong>Transactions:</strong></div>
+          <ul style={{ paddingLeft: '20px', margin: '4px 0' }}>
+            {blockData.transactions.map((tx, idx) => (
+              <li key={idx}>
+                {tx.from} → {tx.to}: {tx.amount} tokens (frais: {tx.fee})
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Question de culture générale */}
+      {!hintUnlocked && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '8px' }}>
+          <h3 style={{ fontSize: '0.9rem', marginTop: 0 }}>📚 Question bonus (débloquez un indice)</h3>
+          <p style={{ fontSize: '0.85rem', marginBottom: '12px' }}>{question.question}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {question.options.map((option, idx) => (
+              <label
+                key={idx}
+                style={{
+                  padding: '8px 12px',
+                  background: selectedAnswer === idx ? 'rgba(56, 189, 248, 0.2)' : 'rgba(0,0,0,0.2)',
+                  border: `1px solid ${selectedAnswer === idx ? 'var(--accent)' : 'rgba(148, 163, 184, 0.3)'}`,
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <input
+                  type="radio"
+                  name="answer"
+                  checked={selectedAnswer === idx}
+                  onChange={() => handleAnswerSelect(idx)}
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+          <button
+            onClick={handleSubmitAnswer}
+            style={{ marginTop: '12px' }}
+            disabled={selectedAnswer === null}
+          >
+            Valider ma réponse
+          </button>
+        </div>
+      )}
+
+      {/* Indice */}
+      {showHint && (
+        <div className="notice success-notice" style={{ marginTop: '12px' }}>
+          💡 <strong>Indice :</strong> {question.hint}
+        </div>
+      )}
+
+      {/* Zone de minage */}
+      {hintUnlocked && !isSuccess && attempts > 0 && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
+          <h3 style={{ fontSize: '0.9rem', marginTop: 0 }}>⛏️ Trouvez le nonce</h3>
+          <p className="small muted">Entrez un nombre entre 0 et 20. Tentatives restantes: <strong>{attempts}/10</strong></p>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+            <input
+              type="number"
+              min="0"
+              max="20"
+              value={nonceInput}
+              onChange={(e) => setNonceInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleMineAttempt()}
+              placeholder="Entrez le nonce"
+              style={{ flex: 1 }}
+            />
+            <button onClick={handleMineAttempt}>Miner</button>
+          </div>
+        </div>
+      )}
+
+      {/* Message de résultat */}
+      {message && (
+        <div className={`notice ${message.includes('✅') || message.includes('🎉') ? 'success-notice' : message.includes('❌') || message.includes('⚠️') ? 'error-notice' : ''}`} style={{ marginTop: '12px' }}>
+          {message}
+        </div>
+      )}
+
+      {/* Historique des tentatives */}
+      {attemptHistory.length > 0 && (
+        <div style={{ marginTop: '16px' }}>
+          <h3 style={{ fontSize: '0.9rem' }}>📋 Historique des tentatives</h3>
+          <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+            <table className="table" style={{ fontSize: '0.75rem' }}>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nonce</th>
+                  <th>Hash généré</th>
+                  <th>Résultat</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attemptHistory.map((attempt, idx) => (
+                  <tr key={idx} style={{ background: attempt.isCorrect ? 'rgba(74, 222, 128, 0.1)' : 'transparent' }}>
+                    <td>{attempt.attemptNumber}</td>
+                    <td>{attempt.nonce}</td>
+                    <td><code>0x{attempt.hash}</code></td>
+                    <td>{attempt.isCorrect ? '✅' : '❌'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Boutons d'action */}
+      <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+        {onBack && (
+          <button className="btn-outline" onClick={onBack}>
+            Retour
+          </button>
+        )}
+        {isSuccess && onComplete && (
+          <button onClick={() => onComplete({ nonce: targetNonce, attempts: 10 - attempts })}>
+            Terminer le challenge
+          </button>
+        )}
+        {!isSuccess && attempts === 0 && (
+          <button onClick={initializeChallenge}>
+            Recommencer
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}

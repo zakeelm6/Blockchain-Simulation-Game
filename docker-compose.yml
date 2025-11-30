@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: development
+      args:
+        NODE_ENV: development
+    container_name: bc-game-backend
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    restart: unless-stopped
+    networks:
+      - blockchain-network
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+      args:
+        - NODE_ENV=development
+    container_name: bc-game-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:4000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - blockchain-network
+
+networks:
+  blockchain-network:
+    driver: bridge

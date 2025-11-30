@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker-compose ps:*)",
+      "Bash(docker logs:*)",
+      "Bash(cat:*)",
+      "Bash(dir:*)",
+      "Bash(node:*)",
+      "Bash(chcp)",
+      "Bash(timeout 3 node:*)",
+      "Bash(npm install)",
+      "Bash(PORT=4001 timeout 2 node:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
