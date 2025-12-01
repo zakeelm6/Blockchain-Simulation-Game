@@ -12,6 +12,18 @@ Jeu éducatif interactif pour apprendre les concepts de la blockchain à travers
 - **Système de Points** : Accumulation de points à travers les 3 étapes
 - **Badges et Achievements** : Débloquez des badges selon vos performances
 
+### 🏛️ Mode DAO Builder
+
+Apprenez la gouvernance décentralisée en créant et participant à une Organisation Autonome Décentralisée (DAO) :
+
+- **Création de DAO** : Configurez les paramètres de gouvernance (tokens, quorum, seuils)
+- **Tokens de gouvernance** : Chaque membre reçoit des tokens pour voter
+- **Propositions** : Tout membre peut créer une proposition (financement, paramètres, général)
+- **Vote pondéré** : Le poids du vote dépend des tokens détenus
+- **Quorum et approbation** : Règles configurables pour valider les propositions
+- **Treasury** : Budget géré collectivement par les membres
+- **Exécution** : Les propositions approuvées sont exécutées automatiquement
+
 ### 🎓 Mode Classe (2 variantes)
 
 #### Mode Équipe
@@ -276,6 +288,77 @@ docker-compose -f docker-compose.prod.yml up --build
 - Podium des 3 premiers
 - Classement complet
 - Détails des votes et scores
+
+## 🏛️ Déroulement du Mode DAO Builder
+
+### Phase 1 : Configuration (Responsable)
+
+#### 1️⃣ Création du DAO
+- Nom et description du DAO
+- Configuration du token de gouvernance (nom, symbole)
+- Nombre de tokens par membre (ex: 100 tokens)
+
+#### 2️⃣ Paramètres de Gouvernance
+- **Quorum minimum** : % de tokens devant participer (ex: 50%)
+- **Seuil d'approbation** : % de votes POUR requis (ex: 51%, 66%, 75%)
+- **Durée des votes** : Temps alloué pour voter (1 min - 24h)
+- **Treasury** : Budget initial disponible (ex: 10,000 unités)
+
+### Phase 2 : Inscription des Membres
+
+#### 3️⃣ Rejoindre le DAO
+- Les étudiants rejoignent avec le code 6 caractères
+- Distribution automatique des tokens à l'inscription
+- Visualisation en temps réel des membres et tokens distribués
+
+#### 4️⃣ Activation du DAO
+- Minimum 2 membres requis
+- Le responsable active le DAO
+- Passage en mode "actif" - les propositions deviennent possibles
+
+### Phase 3 : Propositions et Votes
+
+#### 5️⃣ Créer une Proposition
+**Tout membre peut créer :**
+- **Proposition de financement** : Demande de fonds du treasury
+- **Proposition de paramètres** : Modification des règles du DAO
+- **Proposition générale** : Tout autre sujet
+
+**Règles :**
+- 1 proposition active par membre maximum
+- Montant ne peut pas dépasser le treasury
+- Durée de vote définie par les paramètres du DAO
+
+#### 6️⃣ Voter sur les Propositions
+- Chaque membre vote : **POUR** / **CONTRE** / **ABSTENTION**
+- **Poids du vote** = nombre de tokens détenus
+- Vote pondéré : Un membre avec 100 tokens pèse plus qu'un avec 50
+
+**Calcul du résultat :**
+- **Participation** = (Total votes / Total tokens) × 100
+- **Quorum atteint** si participation ≥ quorum configuré
+- **Proposition approuvée** si % POUR ≥ seuil d'approbation
+
+#### 7️⃣ Exécution des Propositions
+- Les propositions approuvées passent en statut "passed"
+- Les propositions de financement déduisent du treasury
+- Les propositions rejetées (quorum non atteint ou votes insuffisants)
+- Historique complet conservé
+
+### Phase 4 : Gouvernance Continue
+
+#### 8️⃣ Tableau de Bord en Temps Réel
+**Pour chaque membre :**
+- Visualisation de ses tokens et pouvoir de vote
+- Liste des propositions actives
+- Historique des votes (approuvés/rejetés)
+- Statut du treasury
+
+**Statistiques affichées :**
+- Propositions actives avec compteur de temps restant
+- Résultats en temps réel (POUR, CONTRE, ABSTENTION)
+- Taux de participation au vote
+- Atteinte du quorum visualisée
 
 ## 🧠 Concepts Blockchain Enseignés
 

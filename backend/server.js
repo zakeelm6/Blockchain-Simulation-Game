@@ -19,6 +19,40 @@ const state = {
 
 // Mode Classe - Stockage en mémoire
 const classrooms = new Map(); // classCode -> classroom data
+
+// Mode DAO Builder - Stockage en mémoire
+const daos = new Map(); // daoCode -> dao data
+// Structure DAO:
+// {
+//   code: string (6 chars),
+//   name: string,
+//   description: string,
+//   createdBy: string (responsable),
+//   createdAt: timestamp,
+//   tokenName: string,
+//   tokenSymbol: string,
+//   tokensPerMember: number,
+//   quorum: number (percentage 0-100),
+//   approvalThreshold: number (percentage 0-100),
+//   votingDuration: number (minutes),
+//   treasuryBalance: number,
+//   members: [{ name, tokens, joinedAt }],
+//   proposals: [{
+//     id: string,
+//     title: string,
+//     description: string,
+//     type: 'funding' | 'parameter' | 'general',
+//     amount: number,
+//     proposer: string,
+//     createdAt: timestamp,
+//     votingEndsAt: timestamp,
+//     status: 'active' | 'passed' | 'rejected' | 'executed',
+//     votes: { memberName: { vote: 'for'|'against'|'abstain', weight: number } },
+//     results: { for: number, against: number, abstain: number, quorumReached: boolean }
+//   }],
+//   status: 'configuring' | 'active' | 'closed'
+// }
+
 // Structure classroom (team mode):
 // {
 //   code: string (6 chars),
@@ -1305,6 +1339,294 @@ app.post('/api/class/:code/solo/dao-vote', (req, res) => {
   res.json({
     ok: true,
     classroom
+  });
+});
+
+// ================ MODE DAO BUILDER API ================
+
+// POST /api/dao/create - Créer un nouveau DAO
+app.post('/api/dao/create', (req, res) => {
+  const {
+    daoName,
+    description,
+    responsableName,
+    tokenName,
+    tokenSymbol,
+    tokensPerMember,
+    quorum,
+    approvalThreshold,
+    votingDuration,
+    treasuryBalance
+  } = req.body;
+
+  if (!daoName || !responsableName || !tokenName || !tokenSymbol) {
+    return res.status(400).json({ error: 'Champs requis manquants' });
+  }
+
+  const code = generateUniqueClassCode();
+
+  const dao = {
+    code,
+    name: daoName,
+    description: description || '',
+    createdBy: responsableName,
+    createdAt: Date.now(),
+    tokenName,
+    tokenSymbol,
+    tokensPerMember: tokensPerMember || 100,
+    quorum: quorum || 50,
+    approvalThreshold: approvalThreshold || 51,
+    votingDuration: votingDuration || 60, // minutes
+    treasuryBalance: treasuryBalance || 10000,
+    members: [],
+    proposals: [],
+    status: 'configuring'
+  };
+
+  daos.set(code, dao);
+
+  res.json({
+    ok: true,
+    code,
+    dao
+  });
+});
+
+// GET /api/dao/:code - Obtenir les infos d'un DAO
+app.get('/api/dao/:code', (req, res) => {
+  const dao = daos.get(req.params.code.toUpperCase());
+
+  if (!dao) {
+    return res.status(404).json({ error: 'DAO non trouvé' });
+  }
+
+  res.json({ ok: true, dao });
+});
+
+// POST /api/dao/:code/join - Rejoindre un DAO
+app.post('/api/dao/:code/join', (req, res) => {
+  const { memberName } = req.body;
+  const dao = daos.get(req.params.code.toUpperCase());
+
+  if (!dao) {
+    return res.status(404).json({ error: 'DAO non trouvé' });
+  }
+
+  if (dao.status !== 'configuring' && dao.status !== 'active') {
+    return res.status(400).json({ error: 'Le DAO n\'accepte plus de nouveaux membres' });
+  }
+
+  // Vérifier si le nom existe déjà
+  if (dao.members.some(m => m.name === memberName)) {
+    return res.status(400).json({ error: 'Ce nom est déjà pris' });
+  }
+
+  dao.members.push({
+    name: memberName,
+    tokens: dao.tokensPerMember,
+    joinedAt: Date.now()
+  });
+
+  res.json({
+    ok: true,
+    dao
+  });
+});
+
+// POST /api/dao/:code/activate - Activer le DAO (passer de 'configuring' à 'active')
+app.post('/api/dao/:code/activate', (req, res) => {
+  const dao = daos.get(req.params.code.toUpperCase());
+
+  if (!dao) {
+    return res.status(404).json({ error: 'DAO non trouvé' });
+  }
+
+  if (dao.members.length < 2) {
+    return res.status(400).json({ error: 'Minimum 2 membres requis pour activer le DAO' });
+  }
+
+  dao.status = 'active';
+
+  res.json({
+    ok: true,
+    dao
+  });
+});
+
+// POST /api/dao/:code/proposal/create - Créer une proposition
+app.post('/api/dao/:code/proposal/create', (req, res) => {
+  const { proposerName, title, description, type, amount } = req.body;
+  const dao = daos.get(req.params.code.toUpperCase());
+
+  if (!dao) {
+    return res.status(404).json({ error: 'DAO non trouvé' });
+  }
+
+  if (dao.status !== 'active') {
+    return res.status(400).json({ error: 'Le DAO n\'est pas actif' });
+  }
+
+  // Vérifier que le proposeur est membre
+  const member = dao.members.find(m => m.name === proposerName);
+  if (!member) {
+    return res.status(400).json({ error: 'Vous devez être membre du DAO' });
+  }
+
+  // Vérifier qu'il n'a pas déjà une proposition active
+  const hasActiveProposal = dao.proposals.some(
+    p => p.proposer === proposerName && p.status === 'active'
+  );
+  if (hasActiveProposal) {
+    return res.status(400).json({ error: 'Vous avez déjà une proposition active' });
+  }
+
+  // Vérifier le montant pour les propositions de financement
+  if (type === 'funding') {
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Montant invalide' });
+    }
+    if (amount > dao.treasuryBalance) {
+      return res.status(400).json({ error: 'Montant supérieur au treasury' });
+    }
+  }
+
+  const proposalId = `prop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const now = Date.now();
+  const votingEndsAt = now + (dao.votingDuration * 60 * 1000);
+
+  const proposal = {
+    id: proposalId,
+    title,
+    description: description || '',
+    type,
+    amount: type === 'funding' ? amount : 0,
+    proposer: proposerName,
+    createdAt: now,
+    votingEndsAt,
+    status: 'active',
+    votes: {},
+    results: { for: 0, against: 0, abstain: 0, quorumReached: false }
+  };
+
+  dao.proposals.push(proposal);
+
+  res.json({
+    ok: true,
+    dao,
+    proposal
+  });
+});
+
+// POST /api/dao/:code/proposal/:proposalId/vote - Voter sur une proposition
+app.post('/api/dao/:code/proposal/:proposalId/vote', (req, res) => {
+  const { memberName, vote } = req.body; // vote: 'for' | 'against' | 'abstain'
+  const dao = daos.get(req.params.code.toUpperCase());
+
+  if (!dao) {
+    return res.status(404).json({ error: 'DAO non trouvé' });
+  }
+
+  const proposal = dao.proposals.find(p => p.id === req.params.proposalId);
+  if (!proposal) {
+    return res.status(404).json({ error: 'Proposition non trouvée' });
+  }
+
+  if (proposal.status !== 'active') {
+    return res.status(400).json({ error: 'Le vote est terminé' });
+  }
+
+  // Vérifier que le votant est membre
+  const member = dao.members.find(m => m.name === memberName);
+  if (!member) {
+    return res.status(400).json({ error: 'Vous devez être membre du DAO' });
+  }
+
+  // Vérifier que la période de vote n'est pas terminée
+  if (Date.now() > proposal.votingEndsAt) {
+    proposal.status = 'rejected';
+    return res.status(400).json({ error: 'La période de vote est terminée' });
+  }
+
+  // Enregistrer le vote
+  const weight = member.tokens;
+  proposal.votes[memberName] = { vote, weight };
+
+  // Recalculer les résultats
+  let forVotes = 0;
+  let againstVotes = 0;
+  let abstainVotes = 0;
+
+  Object.values(proposal.votes).forEach(v => {
+    if (v.vote === 'for') forVotes += v.weight;
+    else if (v.vote === 'against') againstVotes += v.weight;
+    else if (v.vote === 'abstain') abstainVotes += v.weight;
+  });
+
+  const totalVotes = forVotes + againstVotes + abstainVotes;
+  const totalTokens = dao.members.reduce((sum, m) => sum + m.tokens, 0);
+  const participationRate = (totalVotes / totalTokens) * 100;
+
+  proposal.results = {
+    for: forVotes,
+    against: againstVotes,
+    abstain: abstainVotes,
+    quorumReached: participationRate >= dao.quorum
+  };
+
+  // Vérifier si tous ont voté
+  const allVoted = dao.members.every(m => proposal.votes[m.name]);
+
+  if (allVoted || Date.now() >= proposal.votingEndsAt) {
+    // Finaliser le vote
+    if (!proposal.results.quorumReached) {
+      proposal.status = 'rejected';
+    } else {
+      const approvalRate = (forVotes / (forVotes + againstVotes)) * 100;
+      if (approvalRate >= dao.approvalThreshold) {
+        proposal.status = 'passed';
+      } else {
+        proposal.status = 'rejected';
+      }
+    }
+  }
+
+  res.json({
+    ok: true,
+    dao,
+    proposal
+  });
+});
+
+// POST /api/dao/:code/proposal/:proposalId/execute - Exécuter une proposition approuvée
+app.post('/api/dao/:code/proposal/:proposalId/execute', (req, res) => {
+  const dao = daos.get(req.params.code.toUpperCase());
+
+  if (!dao) {
+    return res.status(404).json({ error: 'DAO non trouvé' });
+  }
+
+  const proposal = dao.proposals.find(p => p.id === req.params.proposalId);
+  if (!proposal) {
+    return res.status(404).json({ error: 'Proposition non trouvée' });
+  }
+
+  if (proposal.status !== 'passed') {
+    return res.status(400).json({ error: 'La proposition n\'a pas été approuvée' });
+  }
+
+  // Exécuter selon le type
+  if (proposal.type === 'funding') {
+    dao.treasuryBalance -= proposal.amount;
+    // Dans une vraie application, on transférerait les fonds
+  }
+
+  proposal.status = 'executed';
+
+  res.json({
+    ok: true,
+    dao,
+    proposal,
+    message: 'Proposition exécutée avec succès'
   });
 });
 
