@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ClassCreate } from './ClassCreate';
 import { ClassWaiting } from './ClassWaiting';
 import { ClassJoin } from './ClassJoin';
+import { TeacherAccess } from './TeacherAccess';
 import { ParticipantWaiting } from './ParticipantWaiting';
 import { TeamVoting } from './TeamVoting';
 import { ValidatorView } from './ValidatorView';
@@ -11,8 +12,8 @@ import { ClassResults } from './ClassResults';
 import { SoloClassMode } from './SoloClassMode';
 
 export function ClassMode({ onBack }) {
-  const [step, setStep] = useState('choice'); // 'choice' | 'create' | 'join' | 'waiting-teacher' | 'waiting-student' | 'voting' | 'validating' | 'mining' | 'dao' | 'results'
-  const [role, setRole] = useState(null); // 'teacher' | 'student'
+  const [step, setStep] = useState('choice'); // 'choice' | 'create' | 'join' | 'teacher-access' | 'waiting-teacher' | 'waiting-student' | 'voting' | 'validating' | 'mining' | 'dao' | 'results'
+  const [role, setRole] = useState(null); // 'teacher' | 'student' | 'teacher-access'
   const [classCode, setClassCode] = useState('');
   const [participantName, setParticipantName] = useState('');
   const [classroom, setClassroom] = useState(null);
@@ -21,6 +22,8 @@ export function ClassMode({ onBack }) {
     setRole(selectedRole);
     if (selectedRole === 'teacher') {
       setStep('create');
+    } else if (selectedRole === 'teacher-access') {
+      setStep('teacher-access');
     } else {
       setStep('join');
     }
@@ -49,6 +52,13 @@ export function ClassMode({ onBack }) {
     } else {
       setStep('waiting-student');
     }
+  }
+
+  function handleTeacherAccess(code, classroomData) {
+    setClassCode(code);
+    setClassroom(classroomData);
+    setRole('teacher-access');
+    setStep('solo-dashboard');
   }
 
   function handleGameStarted(classroomData) {
@@ -105,7 +115,7 @@ export function ClassMode({ onBack }) {
         <p className="muted">Jouez en équipe avec toute votre classe</p>
 
         <div style={{ marginTop: '32px', display: 'grid', gap: '16px' }}>
-          {/* Responsable */}
+          {/* Responsable - Créer */}
           <div
             onClick={() => handleRoleChoice('teacher')}
             style={{
@@ -120,9 +130,30 @@ export function ClassMode({ onBack }) {
             onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.3)'}
           >
             <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '12px' }}>👨‍🏫</div>
-            <h3 style={{ margin: '0 0 8px 0', textAlign: 'center', fontSize: '1.2rem' }}>Responsable</h3>
+            <h3 style={{ margin: '0 0 8px 0', textAlign: 'center', fontSize: '1.2rem' }}>Responsable - Créer</h3>
             <p style={{ margin: 0, textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
-              Créez une classe et obtenez un code à partager
+              Créez une nouvelle classe et obtenez un code
+            </p>
+          </div>
+
+          {/* Responsable - Accéder */}
+          <div
+            onClick={() => handleRoleChoice('teacher-access')}
+            style={{
+              padding: '24px',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1))',
+              border: '2px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#f59e0b'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)'}
+          >
+            <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '12px' }}>🔑</div>
+            <h3 style={{ margin: '0 0 8px 0', textAlign: 'center', fontSize: '1.2rem' }}>Responsable - Accéder</h3>
+            <p style={{ margin: 0, textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
+              Accédez au tableau de bord de votre classe Solo
             </p>
           </div>
 
@@ -171,6 +202,10 @@ export function ClassMode({ onBack }) {
 
   if (step === 'join') {
     return <ClassJoin onJoined={handleJoined} onBack={handleBackToHome} />;
+  }
+
+  if (step === 'teacher-access') {
+    return <TeacherAccess onAccess={handleTeacherAccess} onBack={handleBackToHome} />;
   }
 
   if (step === 'waiting-teacher') {
