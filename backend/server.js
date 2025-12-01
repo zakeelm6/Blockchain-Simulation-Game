@@ -22,6 +22,18 @@ const classrooms = new Map(); // classCode -> classroom data
 
 // Mode DAO Builder - Stockage en mémoire
 const daos = new Map(); // daoCode -> dao data
+
+// Mode Solo Room - Stockage en mémoire
+const soloRooms = new Map(); // roomCode -> room data
+// Structure Solo Room:
+// {
+//   code: string (6 chars),
+//   name: string,
+//   hostName: string,
+//   createdAt: timestamp,
+//   players: [{ name, status, currentStep, score, history[], joinedAt }],
+//   status: 'waiting' | 'active' | 'finished'
+// }
 // Structure DAO:
 // {
 //   code: string (6 chars),
@@ -1628,6 +1640,144 @@ app.post('/api/dao/:code/proposal/:proposalId/execute', (req, res) => {
     proposal,
     message: 'Proposition exécutée avec succès'
   });
+});
+
+// ================ MODE SOLO ROOM API ================
+
+// POST /api/solo-room/create - Créer une salle solo
+app.post('/api/solo-room/create', (req, res) => {
+  const { roomName, hostName } = req.body;
+
+  if (!roomName || !hostName) {
+    return res.status(400).json({ error: 'Nom de salle et nom d\'hôte requis' });
+  }
+
+  // Générer un code unique de 6 caractères
+  let code;
+  do {
+    code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  } while (soloRooms.has(code));
+
+  const room = {
+    code,
+    name: roomName.trim(),
+    hostName: hostName.trim(),
+    createdAt: Date.now(),
+    players: [],
+    status: 'waiting'
+  };
+
+  soloRooms.set(code, room);
+
+  res.json({ ok: true, code, room });
+});
+
+// GET /api/solo-room/:code - Obtenir les infos d'une salle
+app.get('/api/solo-room/:code', (req, res) => {
+  const room = soloRooms.get(req.params.code.toUpperCase());
+
+  if (!room) {
+    return res.status(404).json({ error: 'Salle introuvable' });
+  }
+
+  res.json({ ok: true, room });
+});
+
+// POST /api/solo-room/:code/join - Rejoindre une salle
+app.post('/api/solo-room/:code/join', (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const { playerName } = req.body;
+
+  const room = soloRooms.get(code);
+
+  if (!room) {
+    return res.status(404).json({ error: 'Salle introuvable' });
+  }
+
+  if (!playerName || !playerName.trim()) {
+    return res.status(400).json({ error: 'Nom de joueur requis' });
+  }
+
+  // Vérifier si le joueur existe déjà
+  const existingPlayer = room.players.find(p => p.name === playerName.trim());
+  if (existingPlayer) {
+    return res.status(400).json({ error: 'Ce nom est déjà pris' });
+  }
+
+  // Ajouter le joueur
+  const player = {
+    name: playerName.trim(),
+    status: 'playing', // 'playing' | 'eliminated' | 'finished'
+    currentStep: 0, // Étape actuelle du jeu
+    score: 0,
+    history: [], // Historique des actions
+    joinedAt: Date.now()
+  };
+
+  room.players.push(player);
+
+  // Activer la salle si c'est le premier joueur
+  if (room.status === 'waiting') {
+    room.status = 'active';
+  }
+
+  res.json({ ok: true, room });
+});
+
+// POST /api/solo-room/:code/player/:playerName/update - Mettre à jour l'état d'un joueur
+app.post('/api/solo-room/:code/player/:playerName/update', (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const playerName = req.params.playerName;
+  const { currentStep, score, status, action } = req.body;
+
+  const room = soloRooms.get(code);
+
+  if (!room) {
+    return res.status(404).json({ error: 'Salle introuvable' });
+  }
+
+  const player = room.players.find(p => p.name === playerName);
+
+  if (!player) {
+    return res.status(404).json({ error: 'Joueur introuvable' });
+  }
+
+  // Mettre à jour les données du joueur
+  if (currentStep !== undefined) player.currentStep = currentStep;
+  if (score !== undefined) player.score = score;
+  if (status) player.status = status;
+
+  // Enregistrer l'action dans l'historique
+  if (action) {
+    player.history.push({
+      timestamp: Date.now(),
+      ...action
+    });
+  }
+
+  res.json({ ok: true, room, player });
+});
+
+// POST /api/solo-room/:code/finish - Terminer la salle
+app.post('/api/solo-room/:code/finish', (req, res) => {
+  const code = req.params.code.toUpperCase();
+
+  const room = soloRooms.get(code);
+
+  if (!room) {
+    return res.status(404).json({ error: 'Salle introuvable' });
+  }
+
+  room.status = 'finished';
+
+  // Calculer le classement final
+  const rankings = room.players
+    .map(p => ({ ...p }))
+    .sort((a, b) => b.score - a.score);
+
+  room.rankings = rankings;
+
+  res.json({ ok: true, room });
 });
 
 // ---------------- Start server ----------------

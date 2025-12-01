@@ -6,10 +6,11 @@ import { VotingChallenge } from './VotingChallenge';
 import { Results } from './Results';
 import { ClassMode } from './ClassMode';
 import { DAOMode } from './DAOMode';
+import { SoloRoomMode } from './SoloRoomMode';
 import { LandingPage } from './LandingPage';
 
 function App() {
-  const [step, setStep] = useState('landing'); // 'landing' | 'solo' | 'class' | 'dao' | 'soloContracts' | 'mining' | 'voting' | 'results'
+  const [step, setStep] = useState('landing'); // 'landing' | 'solo' | 'solo-room' | 'class' | 'dao' | 'soloContracts' | 'mining' | 'voting' | 'results'
   const [soloPlayerName, setSoloPlayerName] = useState('');
   const [playerScore, setPlayerScore] = useState(0);
   const [gameHistory, setGameHistory] = useState({
@@ -30,6 +31,10 @@ function App() {
 
   function goToDAOMode() {
     setStep('dao');
+  }
+
+  function goToSoloRoom() {
+    setStep('solo-room');
   }
 
   function goToLanding() {
@@ -116,7 +121,7 @@ function App() {
 
       <main className="app-main">
         {step === 'landing' && (
-          <LandingPage onSolo={goToSolo} onClassMode={goToClassMode} onDAOMode={goToDAOMode} />
+          <LandingPage onSolo={goToSolo} onClassMode={goToClassMode} onDAOMode={goToDAOMode} onSoloRoom={goToSoloRoom} />
         )}
 
         {step === 'class' && (
@@ -125,6 +130,10 @@ function App() {
 
         {step === 'dao' && (
           <DAOMode onBack={goToLanding} />
+        )}
+
+        {step === 'solo-room' && (
+          <SoloRoomMode onBack={goToLanding} />
         )}
 
         {step === 'solo' && (

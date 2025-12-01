@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function LandingPage({ onSolo, onClassMode, onDAOMode }) {
+export function LandingPage({ onSolo, onClassMode, onDAOMode, onSoloRoom }) {
   return (
     <section className="hero">
       <div className="hero-bg-text">INTRO TO BLOCKCHAIN</div>
@@ -15,6 +15,9 @@ export function LandingPage({ onSolo, onClassMode, onDAOMode }) {
         <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={onSolo} style={{ minWidth: '200px' }}>
             🎮 Mode Solo
+          </button>
+          <button onClick={onSoloRoom} style={{ minWidth: '200px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none' }}>
+            🎯 Solo en Salle
           </button>
           <button onClick={onClassMode} style={{ minWidth: '200px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', border: 'none' }}>
             🎓 Mode Classe
