@@ -43,6 +43,30 @@ Apprenez la gouvernance décentralisée en créant et participant à une Organis
 - **Tableau de bord** : Le responsable voit la progression de tous en temps réel
 - **Vote DAO final** : Seuls les joueurs ayant terminé participent
 
+### 🎯 Mode Solo en Salle
+
+Un mode multijoueur où chaque participant joue individuellement dans une salle partagée :
+
+- **Création de salle** : Un hôte crée une salle et obtient une clé d'accès (6 caractères)
+- **Accès par clé** : Les joueurs rejoignent en entrant la clé de la salle
+- **Progression individuelle** : Chaque joueur avance à son propre rythme
+- **Validation automatique** : 8 bots valident les choix (minimum 2 pour continuer)
+- **Mining solo** : 10 tentatives de mining individuel
+- **Dashboard temps réel** : L'hôte suit la progression de tous les joueurs
+- **Statistiques détaillées** :
+  - Total de joueurs
+  - Joueurs en cours
+  - Joueurs terminés
+  - Joueurs éliminés
+- **Classement dynamique** : Mise à jour automatique du classement par score
+- **Gamification** : Système de scoring pour encourager la compétition saine
+
+**Cas d'usage** :
+- Enseignant supervisant plusieurs étudiants
+- Formation en groupe avec suivi individuel
+- Sessions de challenge entre collègues
+- Alternative au mode classe sans contrainte de groupe
+
 ### Technologies
 - **Frontend** : React 18 + Vite + CSS moderne avec animations
 - **Backend** : Node.js + Express + CORS
@@ -359,6 +383,197 @@ docker-compose -f docker-compose.prod.yml up --build
 - Résultats en temps réel (POUR, CONTRE, ABSTENTION)
 - Taux de participation au vote
 - Atteinte du quorum visualisée
+
+## 🎯 Déroulement du Mode Solo en Salle
+
+### Phase 1 : Création de la Salle (Hôte)
+
+#### 1️⃣ Configuration de la Salle
+L'hôte configure la salle de jeu :
+- **Nom de la salle** : Ex: "Challenge Blockchain 2025"
+- **Nom de l'hôte** : Identification du créateur
+- **Génération de clé** : Clé unique de 6 caractères (ex: ABC123)
+
+**Rôle de l'hôte :**
+- Superviser la progression des joueurs
+- Consulter les statistiques en temps réel
+- Ne participe pas au jeu (observateur uniquement)
+
+#### 2️⃣ Partage de la Clé
+- La clé s'affiche en grand sur l'écran de l'hôte
+- L'hôte partage cette clé avec les participants
+- Moyens de partage : projection, messagerie, écrit au tableau
+
+### Phase 2 : Connexion des Joueurs
+
+#### 3️⃣ Rejoindre la Salle
+Chaque joueur :
+- Clique sur "🎯 Solo en Salle" depuis la page d'accueil
+- Choisit "Rejoindre une Salle"
+- Entre la **clé de 6 caractères**
+- Saisit son **nom de joueur** (unique dans la salle)
+- Valide pour rejoindre
+
+**Validation :**
+- Vérification que la salle existe
+- Vérification que le nom n'est pas déjà pris
+- Ajout automatique du joueur à la liste
+
+#### 4️⃣ Tableau de Bord Hôte (Temps Réel)
+L'hôte voit apparaître immédiatement :
+- **Statistiques globales** :
+  - Nombre total de joueurs
+  - Joueurs en cours de jeu
+  - Joueurs ayant terminé
+  - Joueurs éliminés
+- **Classement en direct** :
+  - Rang
+  - Nom du joueur
+  - Statut (🎮 En jeu, ✅ Terminé, ❌ Éliminé)
+  - Étape actuelle
+  - Score
+
+**Mise à jour :** Rafraîchissement automatique toutes les 2 secondes
+
+### Phase 3 : Jeu Individuel
+
+#### 5️⃣ Préparation du Joueur
+Écran de préparation affichant :
+- **Rappel des règles** :
+  - Choix parmi 2 smart contracts
+  - Validation par 8 bots automatiques
+  - Minimum 2 validations pour continuer
+  - 10 tentatives de mining (nonce 0-20)
+  - Progression suivie en temps réel
+- Bouton "🚀 Commencer le Challenge"
+
+#### 6️⃣ Choix du Smart Contract
+Le joueur reçoit **2 smart contracts aléatoires** :
+- 1 contrat valide (sécurisé)
+- 1 contrat invalide (vulnérable)
+
+**Actions du joueur :**
+- Analyser le code Solidity des deux contrats
+- Identifier les vulnérabilités potentielles
+- Choisir le contrat qu'il estime **valide**
+- Soumettre son choix
+
+#### 7️⃣ Validation Automatique
+**8 bots validateurs** analysent le choix :
+- Chaque bot vote indépendamment
+- Les votes apparaissent progressivement (animation)
+- Résultat : X/8 validations
+
+**Scénarios possibles :**
+- **≥ 2 validations** : ✅ Le joueur continue au mining
+- **< 2 validations** : ❌ Le joueur est éliminé
+
+**Mise à jour automatique :**
+- Le statut du joueur est mis à jour sur le dashboard de l'hôte
+- Le score est calculé selon la performance
+
+#### 8️⃣ Challenge de Mining (si qualifié)
+Le joueur doit trouver un nonce valide :
+- **Objectif** : Trouver un nonce qui donne un hash commençant par "00"
+- **Contraintes** :
+  - Nonce de 0 à 20
+  - Maximum 10 tentatives
+- **Interface** :
+  - Champ pour entrer le nonce
+  - Bouton "Miner le Bloc"
+  - Compteur de tentatives restantes
+  - Affichage du hash généré
+
+**Calcul du score :**
+- 1ère tentative : +20 points
+- 2-3 tentatives : +15 points
+- 4-6 tentatives : +10 points
+- 7-10 tentatives : +5 points
+
+**Mise à jour temps réel :**
+- Score mis à jour sur le dashboard
+- Étape actuelle : "Mining"
+- Tentatives enregistrées
+
+#### 9️⃣ Fin du Challenge
+Lorsque le joueur termine (mining réussi ou échoué) :
+- **Statut** : Changé en "✅ Terminé"
+- **Score final** : Affiché au joueur
+- **Écran de félicitations** avec 🏆
+- **Classement** : Visible sur le dashboard de l'hôte
+
+**Message de fin :**
+- "Félicitations [Nom] !"
+- "Votre score et classement sont visibles sur le tableau de bord"
+- Possibilité de quitter ou consulter le classement
+
+### Phase 4 : Supervision et Classement
+
+#### 🔟 Dashboard Hôte - Vue Complète
+L'hôte voit en temps réel :
+
+**Statistiques globales :**
+```
+┌─────────────┬─────────────┬─────────────┬─────────────┐
+│   Total     │   En Jeu    │  Terminés   │  Éliminés   │
+│     15      │      8      │      5      │      2      │
+└─────────────┴─────────────┴─────────────┴─────────────┘
+```
+
+**Classement détaillé (Tableau) :**
+```
+┌────┬──────────┬───────────┬────────┬────────┐
+│ #  │  Joueur  │  Statut   │ Étape  │ Score  │
+├────┼──────────┼───────────┼────────┼────────┤
+│ 🥇 │  Alice   │ ✅ Terminé│   10   │  142   │
+│ 🥈 │   Bob    │ ✅ Terminé│   10   │  138   │
+│ 🥉 │  Charlie │ 🎮 En jeu │    7   │   85   │
+│ 4  │   David  │ 🎮 En jeu │    5   │   62   │
+│ 5  │   Eve    │ ❌ Éliminé│    3   │   18   │
+└────┴──────────┴───────────┴────────┴────────┘
+```
+
+**Tri automatique :**
+- Classement par score décroissant
+- En cas d'égalité, tri par étape atteinte
+- Mise à jour toutes les 2 secondes
+
+#### Points Attribués
+**Validation Smart Contract :**
+- Bon choix : +10 points
+- Mauvais choix : +3 points
+- +2 points par validation reçue
+
+**Mining :**
+- 1ère tentative : +20 points
+- 2-3 tentatives : +15 points
+- 4-6 tentatives : +10 points
+- 7-10 tentatives : +5 points
+
+**Score maximum possible :** ~46 points
+- Bon choix (10) + 8 validations (16) + Mining 1ère tentative (20) = 46
+
+### Avantages Pédagogiques
+
+**Pour l'Enseignant (Hôte) :**
+- ✅ Supervision facile en temps réel
+- ✅ Aucune intervention manuelle nécessaire
+- ✅ Identification rapide des élèves en difficulté
+- ✅ Statistiques complètes pour évaluation
+- ✅ Gamification encourageant l'engagement
+
+**Pour les Étudiants (Joueurs) :**
+- ✅ Apprentissage autonome à son rythme
+- ✅ Pas de pression de groupe
+- ✅ Retour immédiat sur les performances
+- ✅ Compétition saine via classement
+- ✅ Concepts blockchain appliqués pratiquement
+
+**Cas d'Usage Typiques :**
+- 🎓 Session de TP en classe (enseignant + étudiants)
+- 💼 Formation en entreprise (formateur + employés)
+- 🏆 Compétition entre collègues
+- 📚 Atelier d'apprentissage autonome supervisé
 
 ## 🧠 Concepts Blockchain Enseignés
 
