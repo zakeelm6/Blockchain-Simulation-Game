@@ -1,671 +1,108 @@
-# Blockchain Simulation Game 🎮⛓️
+# 🎮 Blockchain Simulation Game
 
-Jeu éducatif interactif pour apprendre les concepts de la blockchain à travers des défis pratiques : validation de smart contracts, mining proof-of-work, et gouvernance DAO.
+Application web interactive pour apprendre la blockchain à travers deux activités ludiques :
+- **Activité 1** : Validation de smart contracts
+- **Activité 2** : Gouvernance DAO avec votes pondérés
 
-## ✨ Fonctionnalités Principales
+## 🚀 Déploiement rapide (pour les étudiants)
 
-### 🎮 Mode Solo Complet
-- **100 Smart Contracts** : Base de données de 50 contrats valides et 50 invalides
-- **Validation par Bots** : 8 validateurs automatisés analysent votre choix
-- **Mining Challenge** : Trouvez le nonce avec Proof of Work simplifié
-- **Vote DAO** : Système de gouvernance décentralisée avec votes pondérés
-- **Système de Points** : Accumulation de points à travers les 3 étapes
-- **Badges et Achievements** : Débloquez des badges selon vos performances
+**📖 Consultez le guide complet : [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md)**
 
-### 🏛️ Mode DAO Builder
+### Déploiement sur Render.com (GRATUIT)
 
-Apprenez la gouvernance décentralisée en créant et participant à une Organisation Autonome Décentralisée (DAO) :
+1. Poussez le code sur GitHub
+2. Créez un compte sur https://render.com
+3. Connectez votre dépôt GitHub
+4. Render déploiera automatiquement via `render.yaml`
+5. Partagez le lien généré aux étudiants !
 
-- **Création de DAO** : Configurez les paramètres de gouvernance (tokens, quorum, seuils)
-- **Tokens de gouvernance** : Chaque membre reçoit des tokens pour voter
-- **Propositions** : Tout membre peut créer une proposition (financement, paramètres, général)
-- **Vote pondéré** : Le poids du vote dépend des tokens détenus
-- **Quorum et approbation** : Règles configurables pour valider les propositions
-- **Treasury** : Budget géré collectivement par les membres
-- **Exécution** : Les propositions approuvées sont exécutées automatiquement
-
-### 🎓 Mode Classe (2 variantes)
-
-#### Mode Équipe
-- **Groupes automatiques** : Formation de groupes de 4 (3 votants + 1 validateur)
-- **Vote en équipe** : Les 3 membres votent pour choisir le smart contract
-- **Validation croisée** : Chaque validateur évalue les choix des autres équipes
-- **Mining collaboratif** : Top 20% des équipes qualifiées, 40 tentatives par équipe (10/membre)
-- **Vote DAO final** : Top 2 équipes participent au vote individuel pondéré
-- **Classement final** : Podium et résultats détaillés
-
-#### Mode Solo en Classe
-- **Responsable** : Crée une classe et obtient un code à partager
-- **Joueurs indépendants** : Chaque participant progresse à son rythme
-- **Validation bot** : 8 bots évaluent le choix (min 2 pour continuer)
-- **Mining individuel** : 10 tentatives, nonce 0-20
-- **Élimination** : Les joueurs peuvent être éliminés mais sauvegardent leur progression
-- **Tableau de bord** : Le responsable voit la progression de tous en temps réel
-- **Vote DAO final** : Seuls les joueurs ayant terminé participent
-
-### 🎯 Mode Solo en Salle
-
-Un mode multijoueur où chaque participant joue individuellement dans une salle partagée :
-
-- **Création de salle** : Un hôte crée une salle et obtient une clé d'accès (6 caractères)
-- **Accès par clé** : Les joueurs rejoignent en entrant la clé de la salle
-- **Progression individuelle** : Chaque joueur avance à son propre rythme
-- **Validation automatique** : 8 bots valident les choix (minimum 2 pour continuer)
-- **Mining solo** : 10 tentatives de mining individuel
-- **Dashboard temps réel** : L'hôte suit la progression de tous les joueurs
-- **Statistiques détaillées** :
-  - Total de joueurs
-  - Joueurs en cours
-  - Joueurs terminés
-  - Joueurs éliminés
-- **Classement dynamique** : Mise à jour automatique du classement par score
-- **Gamification** : Système de scoring pour encourager la compétition saine
-
-**Cas d'usage** :
-- Enseignant supervisant plusieurs étudiants
-- Formation en groupe avec suivi individuel
-- Sessions de challenge entre collègues
-- Alternative au mode classe sans contrainte de groupe
-
-### Technologies
-- **Frontend** : React 18 + Vite + CSS moderne avec animations
-- **Backend** : Node.js + Express + CORS
-- **Architecture** : SPA (Single Page Application) avec état géré par hooks
-- **Déploiement** : Docker + Docker Compose prêt pour production
-
-## 📁 Structure du Projet
-
-```
-.
-├── backend/                      # Serveur Node.js
-│   ├── server.js                 # API Express (validation, mining, voting)
-│   ├── smartContracts.js         # Base de 100 smart contracts
-│   ├── package.json              # Dépendances backend
-│   └── Dockerfile                # Image Docker backend
-│
-├── frontend/                     # Application React
-│   ├── src/
-│   │   ├── App.jsx               # Router principal et gestion d'état
-│   │   ├── LandingPage.jsx       # Page d'accueil
-│   │   ├── SoloGame.jsx          # Saisie du nom du joueur
-│   │   ├── SoloContractChoice.jsx # Choix de smart contract + validation
-│   │   ├── MiningChallenge.jsx   # Défi de mining avec PoW
-│   │   ├── VotingChallenge.jsx   # Vote DAO décentralisé
-│   │   ├── Results.jsx           # Récapitulatif complet du parcours
-│   │   ├── index.css             # Styles globaux avec thème sombre
-│   │   └── main.jsx              # Point d'entrée React
-│   ├── index.html
-│   ├── vite.config.js            # Configuration Vite
-│   ├── package.json              # Dépendances frontend
-│   └── Dockerfile                # Image Docker frontend
-│
-├── docker-compose.yml            # Orchestration dev
-├── docker-compose.prod.yml       # Orchestration production
-└── README.md                     # Documentation
-```
-
-## 🚀 Installation et Démarrage
-
-### Prérequis
-
-- **Node.js 18+** et **npm**
-- **Docker et Docker Compose** (optionnel, pour le déploiement)
-
-### Option 1 : Développement Local (Recommandé)
-
-1. **Clonez le dépôt** :
-   ```bash
-   git clone https://github.com/votre-utilisateur/Blockchain-Simulation-Game.git
-   cd Blockchain-Simulation-Game
-   ```
-
-2. **Installez les dépendances** :
-   ```bash
-   # Backend
-   cd backend
-   npm install
-
-   # Frontend
-   cd ../frontend
-   npm install
-   ```
-
-3. **Lancez l'application** :
-
-   **Terminal 1** (Backend) :
-   ```bash
-   cd backend
-   node server.js
-   # Serveur lancé sur http://localhost:4000
-   ```
-
-   **Terminal 2** (Frontend) :
-   ```bash
-   cd frontend
-   npm run dev
-   # Application disponible sur http://localhost:5173
-   ```
-
-4. **Accédez à l'application** : Ouvrez [http://localhost:5173](http://localhost:5173) dans votre navigateur
-
-### Option 2 : Démarrage avec Docker
-
-```bash
-# Mode développement
-docker-compose up --build
-
-# Mode production
-docker-compose -f docker-compose.prod.yml up --build
-```
-
-**Ports** :
-- Frontend : http://localhost:3000 (Docker) ou http://localhost:5173 (Vite)
-- Backend : http://localhost:4000
-
-## 🎮 Déroulement du Jeu (Mode Solo)
-
-### 1️⃣ Page d'Accueil
-- Présentation du jeu éducatif blockchain
-- Bouton "Mode Solo" pour commencer
-
-### 2️⃣ Saisie du Nom
-- Le joueur entre son nom
-- Animation de transition
-
-### 3️⃣ Validation Smart Contract (Étape 1)
-- **Choix** : 2 smart contracts proposés (1 valide, 1 invalide)
-- **Validation** : 8 bots analysent automatiquement votre choix
-- **Points** :
-  - Bon choix : **+10 points**
-  - Mauvais choix : **+3 points** (pour la tentative)
-  - **+2 points** par validateur en accord
-
-### 4️⃣ Mining Challenge (Étape 2)
-- **Question blockchain** : Répondez pour débloquer un indice
-- **Bloc visuel** : Visualisation complète du bloc (height, timestamp, hash, nonce, transactions)
-- **Trouvez le nonce** : Proof of Work simplifié (0-20)
-- **Points** :
-  - 1ère tentative : **+20 points** 🌟
-  - 2-3 tentatives : **+15 points**
-  - 4-6 tentatives : **+10 points**
-  - 7-10 tentatives : **+5 points**
-
-### 5️⃣ Vote DAO (Étape 3)
-- **Gouvernance décentralisée** : 9 participants (vous + 8 bots)
-- **Vote manuel** : Vous votez POUR ou CONTRE chaque bot
-- **Vote automatique** : Les bots votent ensuite automatiquement
-- **Votes pondérés** : Le poids dépend du score accumulé (score ÷ 10)
-- **Calcul** :
-  - Vote POUR : **+3 × poids**
-  - Vote CONTRE : **-1 × poids**
-
-### 6️⃣ Résultats du Vote
-- Classement final des 9 participants
-- Votre position (#1 à #9)
-- Détail des votes POUR et CONTRE reçus
-- Score final après votes
-
-### 7️⃣ Récapitulatif Complet
-- **Résumé du Vote DAO** : Classement, score, votes
-- **Récapitulatif des 3 étapes** :
-  - ✅ Validation Smart Contract
-  - ⛏️ Mining Challenge
-  - 🗳️ Vote DAO
-- **Score total** du parcours
-- **Badges obtenus** :
-  - 🎯 **Validateur Expert** (contrat correct)
-  - ⛏️ **Mineur Efficace** (≤3 tentatives)
-  - 🏆 **Top 3 DAO** (classement ≤3)
-  - ⭐ **Score d'Excellence** (score ≥100)
-
-## 🎯 Système de Points et Scoring
-
-| Étape | Action | Points |
-|-------|--------|--------|
-| **Validation** | Smart contract correct | +10 |
-| **Validation** | Smart contract incorrect | +3 |
-| **Validation** | Par validateur en accord | +2 |
-| **Mining** | 1ère tentative | +20 |
-| **Mining** | 2-3 tentatives | +15 |
-| **Mining** | 4-6 tentatives | +10 |
-| **Mining** | 7-10 tentatives | +5 |
-| **Vote DAO** | Vote POUR reçu | +(score votant ÷ 10) × 3 |
-| **Vote DAO** | Vote CONTRE reçu | -(score votant ÷ 10) |
-
-**Score maximum théorique** : ~130+ points (selon les votes DAO)
-
-## 🎓 Déroulement du Mode Classe
-
-### Mode Équipe
-
-#### 1️⃣ Création et Inscription
-- **Responsable** : Crée la classe, obtient un code 6 caractères
-- **Participants** : Rejoignent avec le code et leur nom
-- **Formation** : Groupes de 4 automatiques (3 votants + 1 validateur)
-
-#### 2️⃣ Vote en Équipe
-- Les 3 votants choisissent parmi les smart contracts proposés
-- Vote majoritaire détermine le choix de l'équipe
-- Chaque équipe a son logo et son nom
-
-#### 3️⃣ Validation Croisée
-- Chaque validateur évalue les choix des **autres** équipes
-- **Points** : +5 si validation correcte, -3 si incorrecte
-- Équipes gagnent +10 pour un bon choix de contrat
-
-#### 4️⃣ Mining Collaboratif
-- **Qualification** : Top 20% des équipes (minimum 1)
-- **Nonce** : Entre 0 et 100
-- **Tentatives** : 10 par membre, 40 total pour une équipe de 4
-- **Points selon le rang** :
-  - 1ère équipe : **+30 points**
-  - 2ème équipe : **+20 points**
-  - 3ème équipe : **+15 points**
-  - 4ème équipe : **+10 points**
-  - Autres : **+5 points**
-
-#### 5️⃣ Vote DAO Final
-- **Qualification** : Top 2 équipes uniquement
-- **Vote individuel** : Chaque membre vote pour/contre les autres membres
-- **Poids** : Score d'équipe ÷ nombre de membres + bonus mineur
-- **Calcul** : Vote POUR = +3×poids, Vote CONTRE = -1×poids
-
-#### 6️⃣ Résultats Finaux
-- Podium des 3 premiers
-- Classement complet avec scores
-- Statistiques de la classe
-
-### Mode Solo en Classe
-
-#### 1️⃣ Création et Inscription
-- **Responsable** : Crée la classe en mode "Solo", obtient un code
-- **Joueurs** : Rejoignent individuellement et commencent immédiatement
-
-#### 2️⃣ Choix du Smart Contract
-- 2 contrats proposés (1 valide, 1 invalide)
-- 8 bots valident le choix
-- **Élimination** : Si moins de 2 bots approuvent
-- **Points** : +10 pour bon choix
-
-#### 3️⃣ Mining Challenge
-- **Nonce** : Entre 0 et 20
-- **Tentatives** : 10 maximum
-- **Élimination** : Si toutes les tentatives épuisées
-- **Points** :
-  - ≤3 tentatives : **+20 points**
-  - 4-6 tentatives : **+10 points**
-  - 7-10 tentatives : **+5 points**
-
-#### 4️⃣ Tableau de Bord Responsable
-- Vue en temps réel de tous les joueurs
-- Statistiques : En choix, en mining, terminés, éliminés
-- Détails : Contrat choisi, validations, tentatives, score
-- Bouton pour lancer le vote DAO quand ≥2 joueurs terminés
-
-#### 5️⃣ Vote DAO Final
-- **Participants** : Uniquement les joueurs ayant terminé
-- **Vote** : Chacun vote POUR/CONTRE les autres
-- **Poids** : Score accumulé ÷ 10
-- **Calcul** : Vote POUR = +3×poids, Vote CONTRE = -1×poids
-
-#### 6️⃣ Résultats Finaux
-- Podium des 3 premiers
-- Classement complet
-- Détails des votes et scores
-
-## 🏛️ Déroulement du Mode DAO Builder
-
-### Phase 1 : Configuration (Responsable)
-
-#### 1️⃣ Création du DAO
-- Nom et description du DAO
-- Configuration du token de gouvernance (nom, symbole)
-- Nombre de tokens par membre (ex: 100 tokens)
-
-#### 2️⃣ Paramètres de Gouvernance
-- **Quorum minimum** : % de tokens devant participer (ex: 50%)
-- **Seuil d'approbation** : % de votes POUR requis (ex: 51%, 66%, 75%)
-- **Durée des votes** : Temps alloué pour voter (1 min - 24h)
-- **Treasury** : Budget initial disponible (ex: 10,000 unités)
-
-### Phase 2 : Inscription des Membres
-
-#### 3️⃣ Rejoindre le DAO
-- Les étudiants rejoignent avec le code 6 caractères
-- Distribution automatique des tokens à l'inscription
-- Visualisation en temps réel des membres et tokens distribués
-
-#### 4️⃣ Activation du DAO
-- Minimum 2 membres requis
-- Le responsable active le DAO
-- Passage en mode "actif" - les propositions deviennent possibles
-
-### Phase 3 : Propositions et Votes
-
-#### 5️⃣ Créer une Proposition
-**Tout membre peut créer :**
-- **Proposition de financement** : Demande de fonds du treasury
-- **Proposition de paramètres** : Modification des règles du DAO
-- **Proposition générale** : Tout autre sujet
-
-**Règles :**
-- 1 proposition active par membre maximum
-- Montant ne peut pas dépasser le treasury
-- Durée de vote définie par les paramètres du DAO
-
-#### 6️⃣ Voter sur les Propositions
-- Chaque membre vote : **POUR** / **CONTRE** / **ABSTENTION**
-- **Poids du vote** = nombre de tokens détenus
-- Vote pondéré : Un membre avec 100 tokens pèse plus qu'un avec 50
-
-**Calcul du résultat :**
-- **Participation** = (Total votes / Total tokens) × 100
-- **Quorum atteint** si participation ≥ quorum configuré
-- **Proposition approuvée** si % POUR ≥ seuil d'approbation
-
-#### 7️⃣ Exécution des Propositions
-- Les propositions approuvées passent en statut "passed"
-- Les propositions de financement déduisent du treasury
-- Les propositions rejetées (quorum non atteint ou votes insuffisants)
-- Historique complet conservé
-
-### Phase 4 : Gouvernance Continue
-
-#### 8️⃣ Tableau de Bord en Temps Réel
-**Pour chaque membre :**
-- Visualisation de ses tokens et pouvoir de vote
-- Liste des propositions actives
-- Historique des votes (approuvés/rejetés)
-- Statut du treasury
-
-**Statistiques affichées :**
-- Propositions actives avec compteur de temps restant
-- Résultats en temps réel (POUR, CONTRE, ABSTENTION)
-- Taux de participation au vote
-- Atteinte du quorum visualisée
-
-## 🎯 Déroulement du Mode Solo en Salle
-
-### Phase 1 : Création de la Salle (Hôte)
-
-#### 1️⃣ Configuration de la Salle
-L'hôte configure la salle de jeu :
-- **Nom de la salle** : Ex: "Challenge Blockchain 2025"
-- **Nom de l'hôte** : Identification du créateur
-- **Génération de clé** : Clé unique de 6 caractères (ex: ABC123)
-
-**Rôle de l'hôte :**
-- Superviser la progression des joueurs
-- Consulter les statistiques en temps réel
-- Ne participe pas au jeu (observateur uniquement)
-
-#### 2️⃣ Partage de la Clé
-- La clé s'affiche en grand sur l'écran de l'hôte
-- L'hôte partage cette clé avec les participants
-- Moyens de partage : projection, messagerie, écrit au tableau
-
-### Phase 2 : Connexion des Joueurs
-
-#### 3️⃣ Rejoindre la Salle
-Chaque joueur :
-- Clique sur "🎯 Solo en Salle" depuis la page d'accueil
-- Choisit "Rejoindre une Salle"
-- Entre la **clé de 6 caractères**
-- Saisit son **nom de joueur** (unique dans la salle)
-- Valide pour rejoindre
-
-**Validation :**
-- Vérification que la salle existe
-- Vérification que le nom n'est pas déjà pris
-- Ajout automatique du joueur à la liste
-
-#### 4️⃣ Tableau de Bord Hôte (Temps Réel)
-L'hôte voit apparaître immédiatement :
-- **Statistiques globales** :
-  - Nombre total de joueurs
-  - Joueurs en cours de jeu
-  - Joueurs ayant terminé
-  - Joueurs éliminés
-- **Classement en direct** :
-  - Rang
-  - Nom du joueur
-  - Statut (🎮 En jeu, ✅ Terminé, ❌ Éliminé)
-  - Étape actuelle
-  - Score
-
-**Mise à jour :** Rafraîchissement automatique toutes les 2 secondes
-
-### Phase 3 : Jeu Individuel
-
-#### 5️⃣ Préparation du Joueur
-Écran de préparation affichant :
-- **Rappel des règles** :
-  - Choix parmi 2 smart contracts
-  - Validation par 8 bots automatiques
-  - Minimum 2 validations pour continuer
-  - 10 tentatives de mining (nonce 0-20)
-  - Progression suivie en temps réel
-- Bouton "🚀 Commencer le Challenge"
-
-#### 6️⃣ Choix du Smart Contract
-Le joueur reçoit **2 smart contracts aléatoires** :
-- 1 contrat valide (sécurisé)
-- 1 contrat invalide (vulnérable)
-
-**Actions du joueur :**
-- Analyser le code Solidity des deux contrats
-- Identifier les vulnérabilités potentielles
-- Choisir le contrat qu'il estime **valide**
-- Soumettre son choix
-
-#### 7️⃣ Validation Automatique
-**8 bots validateurs** analysent le choix :
-- Chaque bot vote indépendamment
-- Les votes apparaissent progressivement (animation)
-- Résultat : X/8 validations
-
-**Scénarios possibles :**
-- **≥ 2 validations** : ✅ Le joueur continue au mining
-- **< 2 validations** : ❌ Le joueur est éliminé
-
-**Mise à jour automatique :**
-- Le statut du joueur est mis à jour sur le dashboard de l'hôte
-- Le score est calculé selon la performance
-
-#### 8️⃣ Challenge de Mining (si qualifié)
-Le joueur doit trouver un nonce valide :
-- **Objectif** : Trouver un nonce qui donne un hash commençant par "00"
-- **Contraintes** :
-  - Nonce de 0 à 20
-  - Maximum 10 tentatives
-- **Interface** :
-  - Champ pour entrer le nonce
-  - Bouton "Miner le Bloc"
-  - Compteur de tentatives restantes
-  - Affichage du hash généré
-
-**Calcul du score :**
-- 1ère tentative : +20 points
-- 2-3 tentatives : +15 points
-- 4-6 tentatives : +10 points
-- 7-10 tentatives : +5 points
-
-**Mise à jour temps réel :**
-- Score mis à jour sur le dashboard
-- Étape actuelle : "Mining"
-- Tentatives enregistrées
-
-#### 9️⃣ Fin du Challenge
-Lorsque le joueur termine (mining réussi ou échoué) :
-- **Statut** : Changé en "✅ Terminé"
-- **Score final** : Affiché au joueur
-- **Écran de félicitations** avec 🏆
-- **Classement** : Visible sur le dashboard de l'hôte
-
-**Message de fin :**
-- "Félicitations [Nom] !"
-- "Votre score et classement sont visibles sur le tableau de bord"
-- Possibilité de quitter ou consulter le classement
-
-### Phase 4 : Supervision et Classement
-
-#### 🔟 Dashboard Hôte - Vue Complète
-L'hôte voit en temps réel :
-
-**Statistiques globales :**
-```
-┌─────────────┬─────────────┬─────────────┬─────────────┐
-│   Total     │   En Jeu    │  Terminés   │  Éliminés   │
-│     15      │      8      │      5      │      2      │
-└─────────────┴─────────────┴─────────────┴─────────────┘
-```
-
-**Classement détaillé (Tableau) :**
-```
-┌────┬──────────┬───────────┬────────┬────────┐
-│ #  │  Joueur  │  Statut   │ Étape  │ Score  │
-├────┼──────────┼───────────┼────────┼────────┤
-│ 🥇 │  Alice   │ ✅ Terminé│   10   │  142   │
-│ 🥈 │   Bob    │ ✅ Terminé│   10   │  138   │
-│ 🥉 │  Charlie │ 🎮 En jeu │    7   │   85   │
-│ 4  │   David  │ 🎮 En jeu │    5   │   62   │
-│ 5  │   Eve    │ ❌ Éliminé│    3   │   18   │
-└────┴──────────┴───────────┴────────┴────────┘
-```
-
-**Tri automatique :**
-- Classement par score décroissant
-- En cas d'égalité, tri par étape atteinte
-- Mise à jour toutes les 2 secondes
-
-#### Points Attribués
-**Validation Smart Contract :**
-- Bon choix : +10 points
-- Mauvais choix : +3 points
-- +2 points par validation reçue
-
-**Mining :**
-- 1ère tentative : +20 points
-- 2-3 tentatives : +15 points
-- 4-6 tentatives : +10 points
-- 7-10 tentatives : +5 points
-
-**Score maximum possible :** ~46 points
-- Bon choix (10) + 8 validations (16) + Mining 1ère tentative (20) = 46
-
-### Avantages Pédagogiques
-
-**Pour l'Enseignant (Hôte) :**
-- ✅ Supervision facile en temps réel
-- ✅ Aucune intervention manuelle nécessaire
-- ✅ Identification rapide des élèves en difficulté
-- ✅ Statistiques complètes pour évaluation
-- ✅ Gamification encourageant l'engagement
-
-**Pour les Étudiants (Joueurs) :**
-- ✅ Apprentissage autonome à son rythme
-- ✅ Pas de pression de groupe
-- ✅ Retour immédiat sur les performances
-- ✅ Compétition saine via classement
-- ✅ Concepts blockchain appliqués pratiquement
-
-**Cas d'Usage Typiques :**
-- 🎓 Session de TP en classe (enseignant + étudiants)
-- 💼 Formation en entreprise (formateur + employés)
-- 🏆 Compétition entre collègues
-- 📚 Atelier d'apprentissage autonome supervisé
-
-## 🧠 Concepts Blockchain Enseignés
-
-- **Smart Contracts** : Identification de vulnérabilités (reentrancy, overflow, accès non autorisé)
-- **Proof of Work** : Minage de blocs avec recherche de nonce
-- **Hashing** : Calcul de hash de blocs (algorithme simplifié)
-- **DAO Governance** : Vote décentralisé avec pondération
-- **Consensus** : Validation par multiples nœuds (bots validateurs)
-- **Blockchain Structure** : Blocs, transactions, previous hash, timestamp
-
-## 🗄️ Données et Stockage
-
-- **Backend** : Stockage en mémoire (RAM) pendant la session
-- **Frontend** : État React local (hooks useState)
-- **Persistance** : Aucune (redémarrage = reset complet)
-- **Base de données** : 100 smart contracts hardcodés dans `smartContracts.js`
-
-## 🚀 Déploiement Production
-
-### Sur VPS (DigitalOcean, AWS EC2, etc.)
-
-1. **Prérequis** : Docker + Docker Compose installés
-2. **Clonez le repo** :
-   ```bash
-   git clone https://github.com/votre-utilisateur/Blockchain-Simulation-Game.git
-   cd Blockchain-Simulation-Game
-   ```
-3. **Lancez en production** :
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-4. **Configurez le reverse proxy** (Nginx) pour exposer le port 3000
-
-### Sur Plateformes Cloud
-Compatible avec :
-- **Heroku** : Buildpacks Node.js
-- **Vercel/Netlify** : Frontend uniquement (nécessite backend séparé)
-- **Google Cloud Run** : Containers Docker
-- **AWS ECS/Fargate** : Orchestration de containers
-- **DigitalOcean App Platform** : Déploiement automatique
-
-## 📝 Scripts Disponibles
-
-### Backend
-```bash
-npm start          # Lance le serveur Express (port 4000)
-```
-
-### Frontend
-```bash
-npm run dev        # Mode développement (Vite, port 5173)
-npm run build      # Build de production
-npm run preview    # Preview du build
-```
-
-## 🛠️ Stack Technique Détaillée
-
-### Frontend
-- **React 18** : Hooks (useState, useEffect)
-- **Vite 4.5** : Build ultra-rapide, HMR
-- **CSS Vanilla** : Variables CSS, animations, responsive
-- **Fetch API** : Requêtes HTTP vers le backend
-
-### Backend
-- **Express 4.21** : Framework Node.js
-- **CORS** : Cross-Origin Resource Sharing
-- **Body-parser** : Parsing JSON
-- **Architecture REST** : Endpoints `/api/...`
-
-### DevOps
-- **Docker** : Containerisation
-- **Docker Compose** : Orchestration multi-services
-- **Multi-stage builds** : Optimisation des images
-
-## 📄 Licence
-
-Projet éducatif sous **licence MIT**. Libre d'utilisation et modification.
-
-## 🤝 Contribution
-
-Les contributions sont bienvenues ! Pour contribuer :
-
-1. Fork le projet
-2. Créez une branche (`git checkout -b feature/AmazingFeature`)
-3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrez une Pull Request
-
-## 📧 Contact
-
-Pour toute question ou suggestion, ouvrez une **issue** sur GitHub.
+**⏱️ Temps total : 10 minutes**
 
 ---
 
-**Développé avec ❤️ pour l'éducation blockchain**
+## 💻 Développement local
+
+### Avec Docker (recommandé)
+
+```bash
+# Lancer le projet
+docker-compose up
+
+# Frontend : http://localhost:5173
+# Backend : http://localhost:4000
+```
+
+### Sans Docker
+
+**Backend :**
+```bash
+cd backend
+npm install
+npm start
+```
+
+**Frontend :**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## 📁 Structure du projet
+
+```
+Blockchain-Simulation-Game/
+├── frontend/          # Application React + Vite
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── Activity1.jsx
+│   │   ├── SoloGame.jsx
+│   │   ├── Minting.jsx
+│   │   ├── Scoreboard.jsx
+│   │   └── ...
+│   └── index.html
+├── backend/           # API Express.js
+│   └── server.js
+├── assets/            # Images (logos cryptos)
+├── render.yaml        # Configuration Render.com
+└── docker-compose.yml # Configuration Docker
+```
+
+---
+
+## 🎯 Fonctionnalités
+
+### Mode Solo
+- Choix de smart contract (1 vrai + 1 faux)
+- Validation par 8 bots simulés
+- Progression basée sur les validations
+
+### Mode Classe
+- Jusqu'à 8 équipes
+- Sélection de cryptomonnaies
+- Timer de minting (4 minutes)
+- Votes pondérés par tokens
+- Tableau des scores en temps réel
+
+---
+
+## 📊 Technologies
+
+- **Frontend** : React 18, Vite
+- **Backend** : Node.js, Express
+- **Styling** : CSS personnalisé
+- **Déploiement** : Render.com, Docker
+
+---
+
+## 📧 Contact
+
+Pour toute question : Club IBC - INPT
+
+---
+
+## 📄 Licence
+
+MIT License

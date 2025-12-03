@@ -8,10 +8,14 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        // En mode Docker, on cible le service "backend" défini dans docker-compose
-        target: 'http://backend:4000',
+        // En mode local/Docker, on cible le service "backend"
+        target: process.env.VITE_API_URL || 'http://backend:4000',
         changeOrigin: true
       }
     }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false
   }
 });
