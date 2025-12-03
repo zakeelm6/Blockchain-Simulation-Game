@@ -4,7 +4,6 @@ services:
     name: blockchain-game-backend
     env: node
     region: frankfurt
-    plan: free
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
     envVars:
@@ -18,7 +17,6 @@ services:
   - type: web
     name: blockchain-game-frontend
     env: static
-    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
