@@ -31,3 +31,18 @@ yarn-error.log*
 
 # Docker
 .dockerignore
+
+# Ngrok & deployment files
+ngrok.exe
+ngrok.zip
+*.exe
+*.zip
+
+# Test & deploy files
+test-*.html
+deploy.*
+guide-*.html
+
+# Scripts PowerShell/Shell temporaires
+launch-*.ps1
+start.ps1
