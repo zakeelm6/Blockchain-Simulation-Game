@@ -47,3 +47,6 @@ guide-*.html
 # Scripts PowerShell/Shell temporaires
 launch-*.ps1
 start.ps1
+
+# Documentation marketing/LinkedIn
+LINKEDIN_POST*.md

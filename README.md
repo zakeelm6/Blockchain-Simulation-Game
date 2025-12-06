@@ -45,14 +45,18 @@ docker-compose up
 
 ## ✨ Fonctionnalités
 
-- 🎮 **4 modes de jeu** : Solo, Solo en Salle, Classe, DAO
-- 🤖 **8 validateurs automatiques** pour simulation réaliste
-- ⛏️ **Mining interactif** avec Proof of Work simplifié
-- 🗳️ **Système de vote DAO** avec votes pondérés
-- 📊 **Dashboard temps réel** pour le suivi des joueurs
-- 🏆 **Classements automatiques** avec calcul de scores
-- 🔐 **Salles sécurisées** avec clés d'accès (Mode Solo en Salle)
+- 🎮 **4 modes de jeu** : Solo, Solo en Salle, Classe, DAO Builder
+- 🤖 **8 validateurs automatiques** pour simulation réaliste du réseau
+- ⛏️ **Mining interactif** avec Proof of Work simplifié (recherche de nonce)
+- 🗳️ **Système de vote DAO** avec votes pondérés par score
+- 📊 **Dashboard temps réel** pour le suivi multi-joueurs
+- 🏆 **Classements automatiques** avec calcul dynamique des scores
+- 🔐 **Salles sécurisées** avec clés d'accès (6 caractères)
 - 📱 **Interface responsive** adaptée à tous les écrans
+- 🎯 **42 endpoints REST** pour une API complète
+- 👥 **Mode équipe** avec validation collaborative
+- 🏛️ **Gouvernance DAO** avec propositions et exécution automatique
+- 📚 **Smart contracts Solidity** réels pour l'apprentissage
 
 ---
 
@@ -165,8 +169,13 @@ Jusqu'à 8 équipes jouent simultanément en mode collaboratif :
 - Scores en temps réel
 - Activités synchronisées
 
-### 🏛️ Mode DAO
-Mode avancé centré sur la gouvernance décentralisée et les votes collectifs.
+### 🏛️ DAO Builder
+Mode avancé de gouvernance décentralisée :
+- Création d'organisations DAO autonomes
+- Système de propositions et votes pondérés
+- Exécution automatique des décisions
+- Gestion de trésorerie collective
+- Formation à la gouvernance on-chain
 
 ---
 
@@ -226,26 +235,61 @@ Blockchain-Simulation-Game/
 ├── frontend/                    # Application React
 │   ├── src/
 │   │   ├── App.jsx             # Routeur principal
-│   │   ├── LandingPage.jsx     # Page d'accueil avec sélection du mode
-│   │   ├── SoloGame.jsx        # Mode solo
-│   │   ├── SoloContractChoice.jsx  # Choix de smart contract
+│   │   ├── LandingPage.jsx     # Page d'accueil (4 modes)
+│   │   ├── apiClient.js        # Client API REST
+│   │   │
+│   │   ├── # Mode Solo
+│   │   ├── SoloGame.jsx        # Orchestrateur mode solo
+│   │   ├── SoloContractChoice.jsx # Choix smart contract
 │   │   ├── BotValidator.jsx    # Validation par 8 bots
-│   │   ├── Activity1.jsx       # Validation de smart contracts
-│   │   ├── Minting.jsx         # Phase de mining (PoW)
-│   │   ├── VotingChallenge.jsx # Challenge de vote DAO
-│   │   ├── SoloRoomMode.jsx    # Mode Solo en Salle
+│   │   ├── MiningChallenge.jsx # Challenge mining PoW
+│   │   ├── VotingChallenge.jsx # Vote DAO
+│   │   ├── Results.jsx         # Écran résultats final
+│   │   │
+│   │   ├── # Mode Solo en Salle
+│   │   ├── SoloRoomMode.jsx    # Orchestrateur solo room
 │   │   ├── SoloRoomCreate.jsx  # Création de salle
-│   │   ├── SoloRoomJoin.jsx    # Rejoindre une salle
-│   │   ├── SoloRoomDashboard.jsx # Dashboard hôte
+│   │   ├── SoloRoomJoin.jsx    # Rejoindre salle
+│   │   ├── SoloRoomDashboard.jsx # Dashboard hôte temps réel
 │   │   ├── SoloRoomPlayer.jsx  # Interface joueur
-│   │   ├── apiClient.js        # Client API
-│   │   └── ...
+│   │   │
+│   │   ├── # Mode Classe
+│   │   ├── ClassMode.jsx       # Orchestrateur mode classe
+│   │   ├── ClassCreate.jsx     # Création classe
+│   │   ├── ClassJoin.jsx       # Rejoindre classe
+│   │   ├── ClassWaiting.jsx    # Salle d'attente
+│   │   ├── ParticipantWaiting.jsx # Attente participant
+│   │   ├── TeamVoting.jsx      # Vote en équipe
+│   │   ├── TeamMining.jsx      # Mining en équipe
+│   │   ├── ClassResults.jsx    # Résultats classe
+│   │   ├── SoloClassMode.jsx   # Mode solo dans classe
+│   │   ├── SoloClassPlayer.jsx # Joueur solo classe
+│   │   ├── SoloClassDAO.jsx    # DAO solo classe
+│   │   ├── SoloDashboard.jsx   # Dashboard solo classe
+│   │   ├── ValidatorView.jsx   # Vue validateur
+│   │   ├── IndividualVoting.jsx # Vote individuel
+│   │   │
+│   │   ├── # Mode DAO
+│   │   ├── DAOMode.jsx         # Orchestrateur mode DAO
+│   │   ├── DAOCreate.jsx       # Création DAO
+│   │   ├── DAOJoin.jsx         # Rejoindre DAO
+│   │   ├── DAOWaiting.jsx      # Salle d'attente DAO
+│   │   ├── DAODashboard.jsx    # Dashboard DAO
+│   │   │
+│   │   ├── # Utilitaires
+│   │   ├── TeacherAccess.jsx   # Accès enseignant
+│   │   └── main.jsx            # Point d'entrée React
+│   │
 │   └── index.html
+│
 ├── backend/                    # API Node.js + Express
-│   └── server.js              # Serveur avec endpoints API
+│   ├── server.js              # Serveur avec 42 endpoints
+│   └── smartContracts.js      # Base de données smart contracts
+│
 ├── assets/                     # Images et logos
 ├── docker-compose.yml          # Configuration Docker
-├── QUICK_START.md             # Guide de démarrage rapide
+├── QUICK_START.md             # Guide démarrage rapide
+├── LICENSE                     # Licence MIT
 └── README.md                   # Ce fichier
 ```
 
@@ -274,38 +318,78 @@ Blockchain-Simulation-Game/
 
 ## 📡 API Endpoints
 
-### Mode Solo
+L'application expose **42 endpoints REST** organisés par fonctionnalité :
+
+### 🏥 Santé
+- `GET /api/health` - Vérifier l'état du serveur
+
+### 🎯 Mode Solo (Standalone)
 - `GET /api/solo/contracts/pair` - Obtenir 2 smart contracts (1 valide, 1 invalide)
 - `POST /api/solo/contracts/answer` - Soumettre le choix et obtenir la validation
 
-### Mode Solo en Salle
-- `POST /api/solo-room/create` - Créer une salle
+### 🎯 Mode Solo en Salle (Multiplayer Individual)
+- `POST /api/solo-room/create` - Créer une salle avec clé unique
 - `GET /api/solo-room/:code` - Obtenir les infos d'une salle
 - `POST /api/solo-room/:code/join` - Rejoindre une salle
-- `POST /api/solo-room/:code/player/:playerName/update` - Mettre à jour la progression
-- `POST /api/solo-room/:code/finish` - Terminer la salle
+- `POST /api/solo-room/:code/player/:playerName/update` - MAJ progression joueur
+- `POST /api/solo-room/:code/finish` - Terminer et clôturer la salle
 
-### Mode Classe
+### 👥 Mode Classe (Team-based)
+- `POST /api/class/create` - Créer une classe
+- `POST /api/class/join` - Rejoindre une classe
+- `GET /api/class/:code` - Obtenir infos classe
+- `POST /api/class/:code/start` - Démarrer la classe
+- `POST /api/class/:code/vote` - Vote collectif équipe
+- `POST /api/class/:code/validate` - Valider les votes
+- `POST /api/class/:code/mine` - Phase mining équipe
+- `POST /api/class/:code/dao-vote` - Vote DAO en classe
+- `POST /api/class/:code/solo/start` - Démarrer mode solo dans classe
+- `POST /api/class/:code/solo/choose-contract` - Choix contrat solo classe
+- `POST /api/class/:code/solo/mine` - Mining solo classe
+- `POST /api/class/:code/solo/start-dao` - Démarrer DAO solo classe
+- `POST /api/class/:code/solo/dao-vote` - Vote DAO solo classe
+
+### 🏛️ Mode DAO (Governance)
+- `POST /api/dao/create` - Créer une organisation DAO
+- `GET /api/dao/:code` - Obtenir infos DAO
+- `POST /api/dao/:code/join` - Rejoindre DAO
+- `POST /api/dao/:code/activate` - Activer la DAO
+- `POST /api/dao/:code/proposal/create` - Créer une proposition
+- `POST /api/dao/:code/proposal/:proposalId/vote` - Voter sur proposition
+- `POST /api/dao/:code/proposal/:proposalId/execute` - Exécuter proposition
+
+### 📊 Activity 1 (Legacy - Mode Classe)
 - `GET /api/activity1/teams` - Obtenir les équipes
 - `POST /api/activity1/init` - Initialiser l'activité
-- `POST /api/activity1/bump` - Mettre à jour les scores
-- `POST /api/mint/apply` - Appliquer le mining
+- `POST /api/activity1/bump` - Mettre à jour scores équipe
+- `POST /api/activity1/reset` - Réinitialiser activité
+- `GET /api/activity1/eligible` - Obtenir équipes éligibles
 
-### Votes DAO
-- `GET /api/votes/log` - Obtenir l'historique des votes
-- `POST /api/votes/submit` - Soumettre des votes
-- `POST /api/results/compute` - Calculer les résultats finaux
+### ⛏️ Minting
+- `POST /api/mint/apply` - Appliquer récompenses mining
+
+### 👥 Teams (Gestion équipes)
+- `GET /api/teams` - Obtenir toutes les équipes
+- `POST /api/teams/reset` - Réinitialiser équipes
+
+### 🗳️ Votes & Résultats
+- `GET /api/votes/log` - Historique complet des votes
+- `POST /api/votes/submit` - Soumettre votes DAO
+- `POST /api/votes/deleteOne` - Supprimer un vote
+- `POST /api/votes/clear` - Effacer tous les votes
+- `POST /api/votes/resetAggregates` - Réinitialiser agrégats
+- `POST /api/results/compute` - Calculer résultats finaux
 
 ---
 
 ## 📸 Aperçu de l'Application
 
 ### Page d'Accueil
-4 modes de jeu disponibles dès le lancement :
-- 🎯 Mode Solo
-- 🎯 Mode Solo en Salle
-- 👥 Mode Classe
-- 🏛️ Mode DAO
+4 modes de jeu disponibles dès le lancement avec boutons colorés distinctifs :
+- 🎮 **Mode Solo** (Bleu) - Apprentissage individuel
+- 🎯 **Solo en Salle** (Vert) - Multijoueur individuel pour enseignants
+- 🎓 **Mode Classe** (Violet) - Jeu en équipes collaboratives
+- 🏛️ **DAO Builder** (Orange) - Gouvernance décentralisée avancée
 
 ### Mode Solo - Flux Complet
 1. **Choix du Smart Contract** : 2 contrats proposés, 1 seul est valide
@@ -351,10 +435,10 @@ Les contributions sont les bienvenues ! N'hésitez pas à :
 ## ❓ FAQ
 
 ### Combien de joueurs peuvent participer ?
-- **Mode Solo** : 1 joueur + 8 bots
-- **Mode Solo en Salle** : Illimité (chaque joueur joue individuellement)
-- **Mode Classe** : Jusqu'à 8 équipes
-- **Mode DAO** : Variable selon la configuration
+- **Mode Solo** : 1 joueur + 8 validateurs bots
+- **Mode Solo en Salle** : Illimité (chaque joueur progresse individuellement)
+- **Mode Classe** : Jusqu'à 8 équipes de 1-4 joueurs
+- **DAO Builder** : Illimité (membres de l'organisation)
 
 ### Combien de temps dure une partie ?
 - **Mode Solo** : 10-15 minutes (selon la vitesse du joueur)
