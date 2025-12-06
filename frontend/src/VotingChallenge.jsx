@@ -64,12 +64,12 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
       } else {
         clearInterval(interval);
         setCurrentBotVoting(null);
-        setTimeout(() => {
-          setVotingComplete(true);
-          const allVotes = generateBotVotes();
-          setVotes(allVotes);
-          calculateResults(allVotes);
-        }, 300);
+        setBotsVoting(false); // Arrêter l'animation des bots
+        // Afficher les résultats immédiatement après le dernier vote
+        setVotingComplete(true);
+        const allVotes = generateBotVotes();
+        setVotes(allVotes);
+        calculateResults(allVotes);
       }
     }, 300);
   }
@@ -137,9 +137,8 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
     rankings.sort((a, b) => b.finalScore - a.finalScore);
     setFinalRankings(rankings);
 
-    setTimeout(() => {
-      setShowResults(true);
-    }, 1500);
+    // Afficher les résultats immédiatement
+    setShowResults(true);
   }
 
   if (participants.length === 0) {
@@ -170,7 +169,8 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
     );
   }
 
-  if (showResults) {
+  // Afficher les résultats seulement quand les données sont prêtes
+  if (showResults && finalRankings.length > 0) {
     const playerRanking = finalRankings.findIndex(p => p.isPlayer) + 1;
     const playerData = finalRankings.find(p => p.isPlayer);
 
@@ -184,9 +184,12 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
 
     return (
       <section className="card">
-        <h2>🏆 Résultats du Vote DAO</h2>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <div className="success-checkmark" style={{ animation: 'scaleIn 0.5s ease-out' }}>✓</div>
+          <h2 style={{ marginTop: '16px', animation: 'fadeInUp 0.6s ease-out 0.2s both' }}>🏆 Résultats du Vote DAO</h2>
+        </div>
 
-        <div className="notice success-notice" style={{ marginTop: '16px', textAlign: 'center' }}>
+        <div className="notice success-notice" style={{ marginTop: '16px', textAlign: 'center', animation: 'fadeInUp 0.6s ease-out 0.4s both' }}>
           <h3 style={{ margin: '0 0 8px 0' }}>Votre classement : #{playerRanking} / {finalRankings.length}</h3>
           <p style={{ margin: 0 }}>Score final : {playerData?.finalScore} points</p>
         </div>
@@ -238,18 +241,7 @@ export function VotingChallenge({ playerName, playerScore, onComplete, onBack })
     );
   }
 
-  if (votingComplete) {
-    return (
-      <section className="card">
-        <div className="success-animation" style={{ textAlign: 'center', padding: '40px 20px' }}>
-          <div className="success-checkmark">✓</div>
-          <h2 style={{ marginTop: '20px' }}>Vote terminé !</h2>
-          <p className="muted small">Calcul des résultats en cours...</p>
-          <div className="spinner" style={{ marginTop: '20px' }}></div>
-        </div>
-      </section>
-    );
-  }
+  // Écran "Calcul en cours" supprimé - on passe directement aux résultats
 
   const player = participants.find(p => p.isPlayer);
   const bots = participants.filter(p => !p.isPlayer);

@@ -34,13 +34,18 @@ export function SoloContractChoice({ playerName, onBack, onProceedToActivity1 })
   }
 
   function handleValidationComplete(botResult) {
-    // L'utilisateur a cliqué sur "Passer à l'étape suivante"
-    // Passer les résultats de validation avec le nombre de votes valides
+    // L'utilisateur a cliqué sur un bouton après validation
     if (botResult && botResult.validVotes >= 2) {
+      // Validation réussie - passer à l'étape suivante
       onProceedToActivity1({
         correct: botResult.correct,
         validVotes: botResult.validVotes
       });
+    } else {
+      // Validation échouée - permettre de choisir un autre contrat
+      setSelectedContract(null);
+      setShowBotValidation(false);
+      loadContracts(); // Recharger de nouveaux contrats
     }
   }
 
