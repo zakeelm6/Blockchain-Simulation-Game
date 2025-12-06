@@ -467,10 +467,10 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 Développé avec ❤️ par le **Club IBC - INPT**
 
-**Club IBC** (Innovation Blockchain Club) - Club étudiant de l'Institut National des Postes et Télécommunications dédié à l'apprentissage et à l'expérimentation de la blockchain.
+**Club IBC** (Inpt Blockchain Club) - Club étudiant de l'Institut National des Postes et Télécommunications dédié à l'apprentissage et à l'expérimentation de la blockchain.
 
 ### Mainteneurs
-- **Zakaria El Mansouri* ([@zakeelm6](https://github.com/zakeelm6))
+- **Zakariya El Mansouri* ([@zakeelm6](https://github.com/zakeelm6))
 
 ### Contributeurs
 Merci à tous les [contributeurs](https://github.com/zakeelm6/Blockchain-Simulation-Game/graphs/contributors) qui ont participé à ce projet !
