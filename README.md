@@ -453,10 +453,6 @@ Absolument ! C'est l'objectif principal. Le **Mode Solo en Salle** est spécifiq
 
 ### L'application est-elle gratuite ?
 Oui, 100% gratuite et open-source sous licence MIT.
-
-### Comment déployer en production ?
-Voir [QUICK_START.md](QUICK_START.md) pour le déploiement avec Docker ou les guides de déploiement avec ngrok.
-
 ---
 
 ## 📄 Licence
@@ -474,7 +470,7 @@ Développé avec ❤️ par le **Club IBC - INPT**
 **Club IBC** (Innovation Blockchain Club) - Club étudiant de l'Institut National des Postes et Télécommunications dédié à l'apprentissage et à l'expérimentation de la blockchain.
 
 ### Mainteneurs
-- **Zakaria El Malki** ([@zakeelm6](https://github.com/zakeelm6))
+- **Zakaria El Mansouri* ([@zakeelm6](https://github.com/zakeelm6))
 
 ### Contributeurs
 Merci à tous les [contributeurs](https://github.com/zakeelm6/Blockchain-Simulation-Game/graphs/contributors) qui ont participé à ce projet !
@@ -484,22 +480,12 @@ Merci à tous les [contributeurs](https://github.com/zakeelm6/Blockchain-Simulat
 ## 📞 Support & Contact
 
 ### Besoin d'aide ?
-- 📖 Consultez d'abord le [QUICK_START.md](QUICK_START.md)
 - 🐛 Signalez un bug via [GitHub Issues](https://github.com/zakeelm6/Blockchain-Simulation-Game/issues)
 - 💡 Proposez une amélioration via [Pull Request](https://github.com/zakeelm6/Blockchain-Simulation-Game/pulls)
-
-### Contact
-- 📧 Email : [contact@inpt.ac.ma]
-- 🌐 Site web : [Site du Club IBC]
-- 💬 Discord : [Serveur Discord du Club]
-
----
 
 ## 🙏 Remerciements
 
 - Tous les membres du **Club IBC**
-- L'équipe pédagogique de l'**INPT**
-- La communauté **blockchain marocaine**
 - Les contributeurs open-source
 
 ---
