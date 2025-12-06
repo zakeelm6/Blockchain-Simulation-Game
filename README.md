@@ -31,7 +31,7 @@ docker-compose up
 
 ## 📋 À propos
 
-**Blockchain Simulation Game** est un outil pédagogique développé par le **Club IBC (Innovation Blockchain Club)** de l'INPT pour enseigner les concepts fondamentaux de la blockchain de manière interactive.
+**Blockchain Simulation Game** est un outil pédagogique développé par le **Club IBC (Inpt Blockchain Club)** de l'INPT pour enseigner les concepts fondamentaux de la blockchain de manière interactive.
 
 ### 🎯 Objectifs pédagogiques
 
